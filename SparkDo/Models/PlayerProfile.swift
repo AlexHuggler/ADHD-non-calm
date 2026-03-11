@@ -57,7 +57,8 @@ final class PlayerProfile {
 
     func recalculateLevel() {
         var newLevel = 1
-        while Self.sparksRequired(forLevel: newLevel + 1) <= totalSparks {
+        let maxLevel = 500
+        while newLevel < maxLevel && Self.sparksRequired(forLevel: newLevel + 1) <= totalSparks {
             newLevel += 1
         }
         level = newLevel

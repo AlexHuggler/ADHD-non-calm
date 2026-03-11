@@ -82,6 +82,25 @@ final class SparkEngine {
         return transactions
     }
 
+    // MARK: - Undo Quest Completion
+
+    func undoQuestCompletion(_ quest: Quest, transactions: [SparkTransaction], profile: PlayerProfile) {
+        quest.reactivate()
+        profile.questsCompleted = max(0, profile.questsCompleted - 1)
+
+        var totalRefund = 0
+        for tx in transactions {
+            totalRefund += tx.amount
+            modelContext.delete(tx)
+        }
+
+        profile.totalSparks = max(0, profile.totalSparks - totalRefund)
+        profile.spendableSparks = max(0, profile.spendableSparks - totalRefund)
+        profile.recalculateLevel()
+
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
     // MARK: - Daily Challenge Completion
 
     func completeDailyChallenge(_ challenge: DailyChallenge, profile: PlayerProfile) -> SparkTransaction? {

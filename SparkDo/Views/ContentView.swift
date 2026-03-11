@@ -124,9 +124,20 @@ struct ContentView: View {
     // MARK: - Floating Capture Button
 
     private var captureButton: some View {
-        Button {
-            showCaptureOptions()
-            HapticsManager.buttonTap()
+        Menu {
+            Button {
+                showRapidCapture = true
+                HapticsManager.buttonTap()
+            } label: {
+                Label("Quick Add", systemImage: "bolt.fill")
+            }
+
+            Button {
+                showQuestCraft = true
+                HapticsManager.buttonTap()
+            } label: {
+                Label("Craft Quest", systemImage: "wand.and.stars")
+            }
         } label: {
             ZStack {
                 Circle()
@@ -143,8 +154,6 @@ struct ContentView: View {
     }
 
     private func showCaptureOptions() {
-        // For simplicity, show rapid capture by default
-        // A more refined version could show a menu with both options
         showRapidCapture = true
     }
 }

@@ -77,6 +77,12 @@ final class Quest {
 
     var isCompleted: Bool { status == .completed }
     var isActive: Bool { status == .active }
+    var isSkipped: Bool { status == .skipped }
+
+    func reactivate() {
+        status = .active
+        completedAt = nil
+    }
 
     var chainChildren: [Quest] {
         (childQuests ?? []).sorted { $0.sortOrder < $1.sortOrder }

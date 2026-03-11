@@ -5,6 +5,21 @@ struct AchievementsView: View {
     @Query private var achievements: [Achievement]
     @State private var selectedAchievement: Achievement?
     @State private var showDetail = false
+    @State private var filter: AchievementFilter = .unlocked
+
+    enum AchievementFilter: String, CaseIterable {
+        case all = "All"
+        case unlocked = "Unlocked"
+        case locked = "Locked"
+    }
+
+    private var filteredAchievements: [Achievement] {
+        switch filter {
+        case .all: achievements
+        case .unlocked: achievements.filter { $0.isUnlocked }
+        case .locked: achievements.filter { !$0.isUnlocked }
+        }
+    }
 
     private let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -13,18 +28,58 @@ struct AchievementsView: View {
     ]
 
     var body: some View {
-        ScrollView {
-            LazyVGrid(columns: columns, spacing: 16) {
-                ForEach(achievements) { achievement in
-                    AchievementBadge(achievement: achievement)
-                        .onTapGesture {
-                            selectedAchievement = achievement
-                            showDetail = true
-                            HapticsManager.buttonTap()
+        VStack(spacing: 0) {
+            // Filter tabs
+            HStack(spacing: 8) {
+                ForEach(AchievementFilter.allCases, id: \.rawValue) { tab in
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            filter = tab
                         }
+                        HapticsManager.buttonTap()
+                    } label: {
+                        Text(tab.rawValue)
+                            .font(SparkTypography.caption(13))
+                            .foregroundStyle(filter == tab ? .white : SparkTheme.secondaryText)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(
+                                Capsule()
+                                    .fill(filter == tab ? SparkTheme.electricPurple : SparkTheme.cardBackground)
+                            )
+                    }
+                }
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+
+            ScrollView {
+                if filteredAchievements.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: filter == .unlocked ? "trophy" : "lock")
+                            .font(.system(size: 36))
+                            .foregroundStyle(SparkTheme.tertiaryText)
+
+                        Text(filter == .unlocked ? "No achievements unlocked yet" : "All achievements unlocked!")
+                            .font(SparkTypography.body())
+                            .foregroundStyle(SparkTheme.secondaryText)
+                    }
+                    .padding(.top, 60)
+                } else {
+                    LazyVGrid(columns: columns, spacing: 16) {
+                        ForEach(filteredAchievements) { achievement in
+                            AchievementBadge(achievement: achievement)
+                                .onTapGesture {
+                                    selectedAchievement = achievement
+                                    showDetail = true
+                                    HapticsManager.buttonTap()
+                                }
+                        }
+                    }
+                    .padding()
                 }
             }
-            .padding()
         }
         .background(SparkTheme.darkBackground)
         .navigationTitle("Achievements")

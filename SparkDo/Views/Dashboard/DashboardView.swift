@@ -46,6 +46,7 @@ struct DashboardView: View {
             }
             .padding()
         }
+        .refreshable { }
         .background(SparkTheme.darkBackground)
         .navigationTitle("SparkDo")
         .navigationBarTitleDisplayMode(.large)

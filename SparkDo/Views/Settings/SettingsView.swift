@@ -42,6 +42,9 @@ struct SettingsView: View {
                 }
                 .onChange(of: profile.soundEnabled) { _, newValue in
                     SoundManager.shared.isEnabled = newValue
+                    if newValue {
+                        SoundManager.shared.play(.sparkEarned)
+                    }
                 }
 
                 Toggle(isOn: $profile.hapticsEnabled) {
@@ -49,6 +52,9 @@ struct SettingsView: View {
                 }
                 .onChange(of: profile.hapticsEnabled) { _, newValue in
                     HapticsManager.isEnabled = newValue
+                    if newValue {
+                        HapticsManager.buttonTap()
+                    }
                 }
             }
             .listRowBackground(SparkTheme.cardBackground)

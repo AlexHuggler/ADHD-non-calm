@@ -71,11 +71,47 @@ struct QuestTimerView: View {
 
     private var durationPickerView: some View {
         VStack(spacing: 24) {
-            Text(quest.title)
-                .font(SparkTypography.heading(22))
-                .foregroundStyle(SparkTheme.primaryText)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
+            // Quest preview card
+            VStack(spacing: 8) {
+                Text(quest.title)
+                    .font(SparkTypography.heading(22))
+                    .foregroundStyle(SparkTheme.primaryText)
+                    .multilineTextAlignment(.center)
+
+                HStack(spacing: 16) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "bolt.fill")
+                            .font(.system(size: 12))
+                        Text("\(quest.xpValue) XP")
+                            .font(SparkTypography.caption(13))
+                    }
+                    .foregroundStyle(SparkTheme.sunshineYellow)
+
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 12))
+                        Text("\(quest.estimatedMinutes)m est.")
+                            .font(SparkTypography.caption(13))
+                    }
+                    .foregroundStyle(SparkTheme.tertiaryText)
+
+                    Text(quest.energyLevel.label)
+                        .font(SparkTypography.caption(12))
+                        .foregroundStyle(SparkTheme.energyColor(for: quest.energyLevel))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule()
+                                .fill(SparkTheme.energyColor(for: quest.energyLevel).opacity(0.15))
+                        )
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(SparkTheme.cardBackground)
+            )
+            .padding(.horizontal)
 
             Text("Choose your sprint duration")
                 .font(SparkTypography.body())

@@ -21,9 +21,10 @@ final class QuestSurfacingEngine {
 
     // M1 fix: Log fetch errors instead of silent try?
     func fetchActiveQuests(sortedBy mode: SortMode = .shuffle) -> [Quest] {
-        let descriptor = FetchDescriptor<Quest>(
+        var descriptor = FetchDescriptor<Quest>(
             predicate: #Predicate { $0.status == .active }
         )
+        descriptor.fetchLimit = 100
 
         var quests: [Quest]
         do {

@@ -116,7 +116,16 @@ struct QuestCardView: View {
             .gesture(
                 DragGesture()
                     .onChanged { value in
+                        let previous = offset
                         offset = value.translation.width
+
+                        // Haptic ticks at swipe thresholds
+                        if (previous < 50 && offset >= 50) || (previous > -50 && offset <= -50) {
+                            HapticsManager.wheelTick()
+                        }
+                        if (previous < 100 && offset >= 100) || (previous > -100 && offset <= -100) {
+                            HapticsManager.buttonTap()
+                        }
                     }
                     // M2 fix: Use structured concurrency instead of DispatchQueue.main.asyncAfter
                     .onEnded { value in

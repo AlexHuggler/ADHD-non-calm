@@ -34,6 +34,7 @@ final class DailyChallenge {
     }
 
     func incrementProgress() {
+        guard currentCount < targetCount else { return }
         currentCount += 1
         if currentCount >= targetCount {
             isCompleted = true
