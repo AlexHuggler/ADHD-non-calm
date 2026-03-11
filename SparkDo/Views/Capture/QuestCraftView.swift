@@ -315,3 +315,8 @@ struct QuestCraftView: View {
         dismiss()
     }
 }
+
+#Preview {
+    QuestCraftView()
+        .modelContainer(PreviewSampleData.container)
+}

@@ -164,3 +164,8 @@ struct RapidCaptureView: View {
         }
     }
 }
+
+#Preview {
+    RapidCaptureView()
+        .modelContainer(PreviewSampleData.container)
+}

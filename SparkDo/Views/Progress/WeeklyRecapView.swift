@@ -261,3 +261,15 @@ struct RecapStat: View {
         }
     }
 }
+
+#Preview {
+    WeeklyRecapView(
+        profile: PreviewSampleData.sampleProfile,
+        questsThisWeek: 12,
+        sparksThisWeek: 350,
+        minutesSprinted: 45,
+        biggestQuest: PreviewSampleData.sampleQuest,
+        streak: PreviewSampleData.sampleStreak
+    )
+    .modelContainer(PreviewSampleData.container)
+}

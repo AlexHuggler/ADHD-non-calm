@@ -78,3 +78,14 @@ struct SparkCounterView: View {
         }
     }
 }
+
+#Preview {
+    SparkCounterView(
+        totalSparks: 1250,
+        todaySparks: 45,
+        level: 5,
+        levelProgress: 0.6
+    )
+    .padding()
+    .background(SparkTheme.darkBackground)
+}

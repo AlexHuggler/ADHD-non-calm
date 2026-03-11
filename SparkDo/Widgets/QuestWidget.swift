@@ -27,9 +27,10 @@ struct QuestWidgetProvider: TimelineProvider {
         completion(timeline)
     }
 
-    private func loadActiveQuestTitle() -> String? { nil }
-    private func loadActiveQuestXP() -> Int { 0 }
-    private func loadActiveQuestEnergy() -> EnergyLevel { .medium }
+    // Data loading (reads from App Group UserDefaults)
+    private func loadActiveQuestTitle() -> String? { WidgetDataProvider.readActiveQuestTitle() }
+    private func loadActiveQuestXP() -> Int { WidgetDataProvider.readActiveQuestXP() }
+    private func loadActiveQuestEnergy() -> EnergyLevel { WidgetDataProvider.readActiveQuestEnergy() }
 }
 
 // MARK: - Entry

@@ -128,3 +128,10 @@ struct StatRow: View {
         }
     }
 }
+
+#Preview {
+    NavigationStack {
+        SettingsView(profile: PreviewSampleData.sampleProfile)
+    }
+    .modelContainer(PreviewSampleData.container)
+}

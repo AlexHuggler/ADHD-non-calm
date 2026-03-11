@@ -175,3 +175,8 @@ struct PaywallView: View {
         }
     }
 }
+
+#Preview {
+    PaywallView(profile: PreviewSampleData.sampleProfile)
+        .modelContainer(PreviewSampleData.container)
+}

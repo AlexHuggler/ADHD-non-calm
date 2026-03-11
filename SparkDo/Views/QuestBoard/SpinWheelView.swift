@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 struct SpinWheelView: View {
     let quests: [Quest]
@@ -298,4 +299,9 @@ struct WheelSegment: View {
                 .rotationEffect(.degrees(midAngle + 90))
         }
     }
+}
+
+#Preview {
+    SpinWheelView(quests: PreviewSampleData.sampleQuests)
+        .modelContainer(PreviewSampleData.container)
 }

@@ -166,3 +166,10 @@ struct AchievementDetailSheet: View {
         }
     }
 }
+
+#Preview {
+    NavigationStack {
+        AchievementsView()
+    }
+    .modelContainer(PreviewSampleData.container)
+}

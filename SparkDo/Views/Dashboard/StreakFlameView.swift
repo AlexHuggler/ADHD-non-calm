@@ -139,3 +139,10 @@ struct StreakDetailSheet: View {
         .background(SparkTheme.darkBackground)
     }
 }
+
+#Preview {
+    StreakFlameView(streak: PreviewSampleData.sampleStreak)
+        .padding()
+        .background(SparkTheme.darkBackground)
+        .modelContainer(PreviewSampleData.container)
+}

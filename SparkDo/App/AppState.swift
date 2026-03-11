@@ -81,6 +81,9 @@ final class AppState {
 
         // Preload sounds
         SoundManager.shared.preloadSounds()
+
+        // M8 fix: Sync widget data on launch
+        syncWidgetData()
     }
 
     // MARK: - Seeding
@@ -141,5 +144,19 @@ final class AppState {
 
     var todaySparks: Int {
         sparkEngine.todaySparks()
+    }
+
+    // MARK: - Widget Sync
+
+    func syncWidgetData() {
+        let activeQuest = questSurfacing.fetchActiveQuests(sortedBy: .shuffle).first
+        WidgetDataProvider.update(
+            todaySparks: todaySparks,
+            streakDays: streak.currentDays,
+            flameStage: streak.flameStage,
+            activeQuestTitle: activeQuest?.title,
+            activeQuestXP: activeQuest?.xpValue ?? 0,
+            activeQuestEnergy: activeQuest?.energyLevel ?? .medium
+        )
     }
 }

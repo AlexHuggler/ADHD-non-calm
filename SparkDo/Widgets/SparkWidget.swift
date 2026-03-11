@@ -28,23 +28,22 @@ struct SparkWidgetProvider: TimelineProvider {
         completion(timeline)
     }
 
-    // MARK: - Data Loading
+    // MARK: - Data Loading (reads from App Group UserDefaults)
 
     private func loadTodaySparks() -> Int {
-        // In a real app, use shared App Group container to read SwiftData
-        return 0
+        WidgetDataProvider.readTodaySparks()
     }
 
     private func loadStreakDays() -> Int {
-        return 0
+        WidgetDataProvider.readStreakDays()
     }
 
     private func loadFlameStage() -> FlameStage {
-        return .ember
+        WidgetDataProvider.readFlameStage()
     }
 
     private func loadCurrentQuest() -> String? {
-        return nil
+        WidgetDataProvider.readActiveQuestTitle()
     }
 }
 

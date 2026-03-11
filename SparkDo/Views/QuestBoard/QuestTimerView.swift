@@ -300,3 +300,16 @@ struct QuestTimerView: View {
         SoundManager.shared.play(.sprintComplete)
     }
 }
+
+#Preview {
+    let container = PreviewSampleData.container
+    let context = container.mainContext
+    let profile = PreviewSampleData.sampleProfile
+    context.insert(profile)
+    return QuestTimerView(
+        quest: PreviewSampleData.sampleQuest,
+        sparkEngine: SparkEngine(modelContext: context),
+        profile: profile
+    )
+    .modelContainer(container)
+}

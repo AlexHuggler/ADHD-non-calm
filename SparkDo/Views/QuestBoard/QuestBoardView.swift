@@ -164,3 +164,18 @@ struct QuestBoardView: View {
         }
     }
 }
+
+#Preview {
+    let container = PreviewSampleData.container
+    let context = container.mainContext
+    let profile = PreviewSampleData.sampleProfile
+    context.insert(profile)
+    return NavigationStack {
+        QuestBoardView(
+            sparkEngine: SparkEngine(modelContext: context),
+            profile: profile,
+            questSurfacing: QuestSurfacingEngine(modelContext: context)
+        )
+    }
+    .modelContainer(container)
+}

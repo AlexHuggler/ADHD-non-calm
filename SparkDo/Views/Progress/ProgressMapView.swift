@@ -146,3 +146,10 @@ struct MilestoneNode: View {
         return SparkTheme.cardBackground
     }
 }
+
+#Preview {
+    NavigationStack {
+        ProgressMapView(profile: PreviewSampleData.sampleProfile)
+    }
+    .modelContainer(PreviewSampleData.container)
+}

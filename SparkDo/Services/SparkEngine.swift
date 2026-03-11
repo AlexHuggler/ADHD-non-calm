@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import WidgetKit
 
 // M6 fix: @MainActor ensures all state mutations via ModelContext happen on Main Thread
 @MainActor
@@ -74,6 +75,9 @@ final class SparkEngine {
         if profile.level > previousLevel {
             // Level-up is handled by the caller for UI celebration
         }
+
+        // M8 fix: Notify widgets that data changed
+        WidgetCenter.shared.reloadAllTimelines()
 
         return transactions
     }

@@ -97,3 +97,12 @@ struct DailyChallengeCard: View {
         }
     }
 }
+
+#Preview {
+    DailyChallengeCard(
+        challenge: PreviewSampleData.sampleChallenge
+    )
+    .padding()
+    .background(SparkTheme.darkBackground)
+    .modelContainer(PreviewSampleData.container)
+}

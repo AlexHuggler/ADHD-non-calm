@@ -141,6 +141,18 @@ struct QuickActionButton: View {
     }
 }
 
+#Preview {
+    NavigationStack {
+        DashboardView(
+            profile: PreviewSampleData.sampleProfile,
+            streak: PreviewSampleData.sampleStreak,
+            challenge: PreviewSampleData.sampleChallenge,
+            todaySparks: 45
+        )
+    }
+    .modelContainer(PreviewSampleData.container)
+}
+
 // MARK: - Recent Win Card
 
 struct RecentWinCard: View {

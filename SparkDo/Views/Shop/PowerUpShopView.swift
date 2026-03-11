@@ -173,3 +173,17 @@ struct PowerUpCard: View {
         .opacity(powerUp.isPurchased ? 0.7 : 1)
     }
 }
+
+#Preview {
+    let container = PreviewSampleData.container
+    let context = container.mainContext
+    let profile = PreviewSampleData.sampleProfile
+    context.insert(profile)
+    return NavigationStack {
+        PowerUpShopView(
+            profile: profile,
+            sparkEngine: SparkEngine(modelContext: context)
+        )
+    }
+    .modelContainer(container)
+}

@@ -160,3 +160,10 @@ struct QuestCardView: View {
         }
     }
 }
+
+#Preview {
+    QuestCardView(quest: PreviewSampleData.sampleQuest)
+        .padding()
+        .background(SparkTheme.darkBackground)
+        .modelContainer(PreviewSampleData.container)
+}
