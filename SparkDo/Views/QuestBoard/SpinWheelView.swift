@@ -58,18 +58,22 @@ struct SpinWheelView: View {
                     .foregroundStyle(SparkTheme.sunshineYellow)
                     .glow(color: SparkTheme.sunshineYellow, radius: 8)
 
-                // Wheel
-                ZStack {
-                    ForEach(Array(quests.enumerated()), id: \.element.id) { index, quest in
-                        WheelSegment(
-                            quest: quest,
-                            index: index,
-                            total: quests.count
-                        )
+                // H8 fix: Use GeometryReader for responsive wheel sizing instead of hardcoded 280
+                GeometryReader { geo in
+                    let wheelSize = min(geo.size.width, geo.size.height) * 0.85
+                    ZStack {
+                        ForEach(Array(quests.enumerated()), id: \.element.id) { index, quest in
+                            WheelSegment(
+                                quest: quest,
+                                index: index,
+                                total: quests.count
+                            )
+                        }
                     }
+                    .frame(width: wheelSize, height: wheelSize)
+                    .rotationEffect(.degrees(rotation))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .frame(width: 280, height: 280)
-                .rotationEffect(.degrees(rotation))
                 .onTapGesture {
                     if !isSpinning {
                         spin()
@@ -153,7 +157,9 @@ struct SpinWheelView: View {
                         showResult = false
                         selectedQuest = nil
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    // M2 fix: Use structured concurrency
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(300))
                         spin()
                     }
                 } label: {
@@ -183,8 +189,8 @@ struct SpinWheelView: View {
         HapticsManager.buttonTap()
 
         if reduceMotion {
-            // Instant pick for reduce-motion
-            let picked = quests.randomElement()!
+            // C3 fix: Safe unwrap instead of force unwrap on randomElement()
+            guard let picked = quests.randomElement() else { return }
             selectedQuest = picked
             isSpinning = false
             withAnimation { showResult = true }
@@ -198,11 +204,11 @@ struct SpinWheelView: View {
         let segmentAngle = 360.0 / Double(quests.count)
         let targetAngle = 360.0 * Double.random(in: 4...7) + segmentAngle * Double(randomIndex)
 
+        // M2 fix: Use structured concurrency for tick sounds and spin completion
         // Tick sounds during spin
-        let tickCount = 15
-        for i in 0..<tickCount {
-            let delay = Double(i) * 0.12
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        Task {
+            for i in 0..<15 {
+                try? await Task.sleep(for: .milliseconds(Int(Double(i) * 120)))
                 HapticsManager.wheelTick()
                 SoundManager.shared.play(.wheelTick)
             }
@@ -212,7 +218,8 @@ struct SpinWheelView: View {
             rotation += targetAngle
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) {
+        Task {
+            try? await Task.sleep(for: .milliseconds(2800))
             selectedQuest = quests[randomIndex]
             isSpinning = false
             HapticsManager.wheelLanding()

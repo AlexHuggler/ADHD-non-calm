@@ -4,6 +4,8 @@ struct StreakFlameView: View {
     let streak: Streak
     @State private var showDetail = false
     @State private var flicker = false
+    // H5 fix: Check reduce-motion preference before running flicker animation
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Button {
@@ -14,11 +16,13 @@ struct StreakFlameView: View {
                 Image(systemName: "flame.fill")
                     .font(.system(size: 24 * streak.flameStage.flameScale))
                     .foregroundStyle(flameGradient)
-                    .scaleEffect(flicker ? 1.05 : 1.0)
+                    .scaleEffect(flicker && !reduceMotion ? 1.05 : 1.0)
                     .animation(
-                        .easeInOut(duration: 0.8).repeatForever(autoreverses: true),
+                        reduceMotion ? nil : .easeInOut(duration: 0.8).repeatForever(autoreverses: true),
                         value: flicker
                     )
+                    // H7 fix: Accessibility label for flame icon
+                    .accessibilityLabel("Streak flame, \(streak.flameStage.label)")
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(streak.flameStage.label)

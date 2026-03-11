@@ -1,6 +1,8 @@
 import Foundation
 import SwiftData
 
+// M6 fix: @MainActor ensures ModelContext access is Main Thread only
+@MainActor
 @Observable
 final class StreakManager {
     private let modelContext: ModelContext

@@ -1,6 +1,8 @@
 import Foundation
 import SwiftData
 
+// M6 fix: @MainActor ensures ModelContext access is Main Thread only
+@MainActor
 @Observable
 final class QuestSurfacingEngine {
     private let modelContext: ModelContext
@@ -17,12 +19,19 @@ final class QuestSurfacingEngine {
         var id: String { rawValue }
     }
 
+    // M1 fix: Log fetch errors instead of silent try?
     func fetchActiveQuests(sortedBy mode: SortMode = .shuffle) -> [Quest] {
         let descriptor = FetchDescriptor<Quest>(
             predicate: #Predicate { $0.status == .active }
         )
 
-        guard var quests = try? modelContext.fetch(descriptor) else { return [] }
+        var quests: [Quest]
+        do {
+            quests = try modelContext.fetch(descriptor)
+        } catch {
+            print("SparkDo [QuestSurfacingEngine]: Failed to fetch active quests: \(error)")
+            return []
+        }
 
         switch mode {
         case .shuffle:
@@ -53,13 +62,23 @@ final class QuestSurfacingEngine {
             sortBy: [SortDescriptor(\.completedAt, order: .reverse)]
         )
         descriptor.fetchLimit = limit
-        return (try? modelContext.fetch(descriptor)) ?? []
+        do {
+            return try modelContext.fetch(descriptor)
+        } catch {
+            print("SparkDo [QuestSurfacingEngine]: Failed to fetch completed quests: \(error)")
+            return []
+        }
     }
 
     func questCount() -> Int {
         let descriptor = FetchDescriptor<Quest>(
             predicate: #Predicate { $0.status == .active }
         )
-        return (try? modelContext.fetchCount(descriptor)) ?? 0
+        do {
+            return try modelContext.fetchCount(descriptor)
+        } catch {
+            print("SparkDo [QuestSurfacingEngine]: Failed to count active quests: \(error)")
+            return 0
+        }
     }
 }

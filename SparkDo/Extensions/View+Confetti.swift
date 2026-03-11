@@ -45,25 +45,26 @@ struct ConfettiView: View {
             }
         }
         .onAppear {
-            launchConfetti()
+            launchConfetti(in: geo.size)
         }
         .allowsHitTesting(false)
     }
 
-    private func launchConfetti() {
+    // H4 fix: Accept size from GeometryReader instead of using deprecated UIScreen.main
+    private func launchConfetti(in size: CGSize) {
         guard !reduceMotion else {
             isAnimating = true
             return
         }
 
-        let screenWidth: CGFloat = UIScreen.main.bounds.width
+        let screenWidth = size.width
         let centerX = screenWidth / 2
-        let centerY: CGFloat = 300
+        let centerY = size.height / 2
 
         for _ in 0..<40 {
             let particle = ConfettiParticle(
                 position: CGPoint(x: centerX, y: centerY),
-                color: colors.randomElement()!,
+                color: colors.randomElement() ?? SparkTheme.electricPurple,
                 rotation: .degrees(Double.random(in: 0...360)),
                 scale: CGFloat.random(in: 0.5...1.5),
                 opacity: 1.0
@@ -75,14 +76,16 @@ struct ConfettiView: View {
             for i in particles.indices {
                 particles[i].position = CGPoint(
                     x: CGFloat.random(in: 20...(screenWidth - 20)),
-                    y: CGFloat.random(in: 50...600)
+                    y: CGFloat.random(in: 50...size.height)
                 )
                 particles[i].rotation = .degrees(Double.random(in: 0...720))
                 particles[i].opacity = 0
             }
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+        // M2 fix: Use Task.sleep instead of DispatchQueue.main.asyncAfter
+        Task {
+            try? await Task.sleep(for: .milliseconds(900))
             particles.removeAll()
         }
     }
@@ -95,10 +98,10 @@ struct ConfettiModifier: ViewModifier {
         content.overlay {
             if isActive {
                 ConfettiView()
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            isActive = false
-                        }
+                    .task {
+                        // M2 fix: Use structured concurrency instead of DispatchQueue
+                        try? await Task.sleep(for: .seconds(1))
+                        isActive = false
                     }
             }
         }

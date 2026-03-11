@@ -118,6 +118,7 @@ struct QuestCardView: View {
                     .onChanged { value in
                         offset = value.translation.width
                     }
+                    // M2 fix: Use structured concurrency instead of DispatchQueue.main.asyncAfter
                     .onEnded { value in
                         if value.translation.width > 100 {
                             // Swipe right — complete
@@ -126,7 +127,8 @@ struct QuestCardView: View {
                             }
                             HapticsManager.questComplete()
                             SoundManager.shared.play(.questComplete)
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            Task {
+                                try? await Task.sleep(for: .milliseconds(300))
                                 onComplete()
                             }
                         } else if value.translation.width < -100 {
@@ -134,7 +136,8 @@ struct QuestCardView: View {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                 offset = -400
                             }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            Task {
+                                try? await Task.sleep(for: .milliseconds(300))
                                 onSkip()
                             }
                         } else {

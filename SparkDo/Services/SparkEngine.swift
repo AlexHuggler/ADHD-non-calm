@@ -1,6 +1,8 @@
 import Foundation
 import SwiftData
 
+// M6 fix: @MainActor ensures all state mutations via ModelContext happen on Main Thread
+@MainActor
 @Observable
 final class SparkEngine {
     private let modelContext: ModelContext
@@ -13,6 +15,11 @@ final class SparkEngine {
 
     func completeQuest(_ quest: Quest, wasSprint: Bool = false, profile: PlayerProfile) -> [SparkTransaction] {
         guard quest.status == .active else { return [] }
+
+        // H10 fix: Count quests completed today BEFORE marking this one complete,
+        // then add 1 for deterministic bonus detection regardless of SwiftData auto-save timing.
+        let previousTodayCount = questsCompletedToday()
+        let todayCountIncludingThis = previousTodayCount + 1
 
         quest.status = .completed
         quest.completedAt = Date()
@@ -34,20 +41,19 @@ final class SparkEngine {
         transactions.append(baseTx)
 
         // First quest of the day bonus
-        if isFirstQuestToday(profile: profile) {
+        if todayCountIncludingThis == 1 {
             let bonus = SparkTransaction(amount: 25, source: .firstQuestBonus, questTitle: "First Quest Bonus!")
             transactions.append(bonus)
         }
 
         // Hat Trick bonus (3 quests today)
-        let todayCount = questsCompletedToday()
-        if todayCount == 3 {
+        if todayCountIncludingThis == 3 {
             let bonus = SparkTransaction(amount: 50, source: .hatTrickBonus, questTitle: "Hat Trick!")
             transactions.append(bonus)
         }
 
         // Legendary bonus (5 quests today)
-        if todayCount == 5 {
+        if todayCountIncludingThis == 5 {
             let bonus = SparkTransaction(amount: 100, source: .legendaryBonus, questTitle: "Legendary!")
             transactions.append(bonus)
         }
@@ -64,9 +70,8 @@ final class SparkEngine {
 
         let previousLevel = profile.level
         profile.recalculateLevel()
-        let didLevelUp = profile.level > previousLevel
 
-        if didLevelUp {
+        if profile.level > previousLevel {
             // Level-up is handled by the caller for UI celebration
         }
 
@@ -108,8 +113,14 @@ final class SparkEngine {
         let descriptor = FetchDescriptor<SparkTransaction>(
             predicate: #Predicate { $0.earnedAt >= startOfDay }
         )
-        let transactions = (try? modelContext.fetch(descriptor)) ?? []
-        return transactions.reduce(0) { $0 + $1.amount }
+        // M1 fix: Log fetch errors instead of silent try?
+        do {
+            let transactions = try modelContext.fetch(descriptor)
+            return transactions.reduce(0) { $0 + $1.amount }
+        } catch {
+            print("SparkDo [SparkEngine]: Failed to fetch today's sparks: \(error)")
+            return 0
+        }
     }
 
     func recentTransactions(limit: Int = 10) -> [SparkTransaction] {
@@ -117,23 +128,30 @@ final class SparkEngine {
             sortBy: [SortDescriptor(\.earnedAt, order: .reverse)]
         )
         descriptor.fetchLimit = limit
-        return (try? modelContext.fetch(descriptor)) ?? []
+        do {
+            return try modelContext.fetch(descriptor)
+        } catch {
+            print("SparkDo [SparkEngine]: Failed to fetch recent transactions: \(error)")
+            return []
+        }
     }
 
     // MARK: - Private Helpers
 
-    private func isFirstQuestToday(profile: PlayerProfile) -> Bool {
-        questsCompletedToday() == 1
-    }
-
     private func questsCompletedToday() -> Int {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: Date())
+        // C1 fix: Safe optional comparison instead of force unwrap in #Predicate
         let descriptor = FetchDescriptor<Quest>(
-            predicate: #Predicate { quest in
-                quest.status == .completed && quest.completedAt != nil && quest.completedAt! >= startOfDay
+            predicate: #Predicate<Quest> { quest in
+                quest.status == .completed && quest.completedAt ?? .distantPast >= startOfDay
             }
         )
-        return (try? modelContext.fetchCount(descriptor)) ?? 0
+        do {
+            return try modelContext.fetchCount(descriptor)
+        } catch {
+            print("SparkDo [SparkEngine]: Failed to count today's quests: \(error)")
+            return 0
+        }
     }
 }

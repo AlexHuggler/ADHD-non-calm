@@ -35,7 +35,9 @@ final class PlayerProfile {
 
     /// Level N requires N*(N-1)*50 cumulative sparks
     static func sparksRequired(forLevel level: Int) -> Int {
-        level * (level - 1) * 50
+        // M5 fix: Guard against invalid level values
+        guard level > 0 else { return 0 }
+        return level * (level - 1) * 50
     }
 
     var sparksForCurrentLevel: Int {

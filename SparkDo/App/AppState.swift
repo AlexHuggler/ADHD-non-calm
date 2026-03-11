@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
 
+// H3 fix: @MainActor ensures all state mutations happen on Main Thread.
+// This class coordinates UI-bound state; all access should be main-actor-isolated.
+@MainActor
 @Observable
 final class AppState {
     let modelContext: ModelContext
@@ -27,11 +30,18 @@ final class AppState {
         self.questSurfacing = QuestSurfacingEngine(modelContext: modelContext)
         self.storeKit = StoreKitManager()
 
-        // Load or create profile
+        // M1 fix: Load or create profile with error logging
         let profileDescriptor = FetchDescriptor<PlayerProfile>()
-        if let existingProfile = try? modelContext.fetch(profileDescriptor).first {
-            self.profile = existingProfile
-        } else {
+        do {
+            if let existingProfile = try modelContext.fetch(profileDescriptor).first {
+                self.profile = existingProfile
+            } else {
+                let newProfile = PlayerProfile()
+                modelContext.insert(newProfile)
+                self.profile = newProfile
+            }
+        } catch {
+            print("SparkDo [AppState]: Failed to fetch profile: \(error)")
             let newProfile = PlayerProfile()
             modelContext.insert(newProfile)
             self.profile = newProfile
@@ -53,8 +63,10 @@ final class AppState {
         // Reset daily sprint counter if needed
         profile.resetDailySprintsIfNeeded()
 
-        // Sync premium status
-        Task { @MainActor in
+        // H3 fix: StoreKit premium check runs async. Since AppState is now @MainActor,
+        // the Task inherits main-actor isolation. The profile mutation is safe but may
+        // arrive after first render — acceptable for premium status (UI updates reactively).
+        Task {
             await storeKit.checkPurchaseStatus()
             if storeKit.isPurchased {
                 profile.isPremium = true
@@ -73,19 +85,27 @@ final class AppState {
 
     // MARK: - Seeding
 
+    // M1 fix: Log fetch errors instead of silent try?
     private func seedAchievementsIfNeeded() {
         let descriptor = FetchDescriptor<Achievement>()
-        let count = (try? modelContext.fetchCount(descriptor)) ?? 0
+        let count: Int
+        do {
+            count = try modelContext.fetchCount(descriptor)
+        } catch {
+            print("SparkDo [AppState]: Failed to count achievements: \(error)")
+            return
+        }
 
         guard count == 0 else { return }
 
+        // M3 fix: Use labeled struct fields instead of magic tuple indices
         for def in Achievement.definitions {
             let achievement = Achievement(
-                key: def.0,
-                name: def.1,
-                description: def.2,
-                rarity: def.3,
-                iconName: def.4
+                key: def.key,
+                name: def.name,
+                description: def.description,
+                rarity: def.rarity,
+                iconName: def.iconName
             )
             modelContext.insert(achievement)
         }
@@ -93,18 +113,25 @@ final class AppState {
 
     private func seedPowerUpsIfNeeded() {
         let descriptor = FetchDescriptor<PowerUp>()
-        let count = (try? modelContext.fetchCount(descriptor)) ?? 0
+        let count: Int
+        do {
+            count = try modelContext.fetchCount(descriptor)
+        } catch {
+            print("SparkDo [AppState]: Failed to count power-ups: \(error)")
+            return
+        }
 
         guard count == 0 else { return }
 
+        // M3 fix: Use labeled struct fields instead of magic tuple indices
         for def in PowerUp.defaultPowerUps {
             let powerUp = PowerUp(
-                name: def.0,
-                description: def.1,
-                category: def.2,
-                sparkCost: def.3,
-                colorHex: def.4,
-                iconName: def.5
+                name: def.name,
+                description: def.description,
+                category: def.category,
+                sparkCost: def.sparkCost,
+                colorHex: def.colorHex,
+                iconName: def.iconName
             )
             modelContext.insert(powerUp)
         }

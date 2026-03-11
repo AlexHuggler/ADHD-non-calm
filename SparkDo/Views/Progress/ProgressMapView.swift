@@ -31,13 +31,13 @@ struct ProgressMapView: View {
                 }
                 .padding()
             }
-            .onAppear {
+            .task {
                 withAnimation(.easeOut(duration: 0.5)) {
                     animatePosition = true
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    proxy.scrollTo(profile.level, anchor: .center)
-                }
+                // M2 fix: Use structured concurrency instead of DispatchQueue
+                try? await Task.sleep(for: .milliseconds(100))
+                proxy.scrollTo(profile.level, anchor: .center)
             }
         }
         .background(SparkTheme.darkBackground)
@@ -61,6 +61,8 @@ struct MilestoneNode: View {
     let animatePosition: Bool
 
     @State private var glow = false
+    // H6 fix: Check reduce-motion before running glow animation
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 16) {
@@ -77,7 +79,7 @@ struct MilestoneNode: View {
                         .fill(nodeColor)
                         .frame(width: milestone.isCurrent ? 40 : 28, height: milestone.isCurrent ? 40 : 28)
 
-                    if milestone.isCurrent {
+                    if milestone.isCurrent && !reduceMotion {
                         Circle()
                             .fill(SparkTheme.electricPurple.opacity(0.3))
                             .frame(width: 52, height: 52)

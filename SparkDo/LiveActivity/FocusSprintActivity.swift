@@ -149,13 +149,14 @@ final class FocusSprintActivityManager {
             sparkBonus: sparkBonus
         )
 
+        // M1 fix: Log errors instead of silent catch
         do {
             currentActivity = try Activity.request(
                 attributes: attributes,
                 content: .init(state: state, staleDate: nil)
             )
         } catch {
-            // Live Activity not available
+            print("SparkDo [FocusSprintActivityManager]: Failed to start Live Activity: \(error)")
         }
     }
 

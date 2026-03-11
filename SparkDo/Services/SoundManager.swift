@@ -1,5 +1,8 @@
 import AVFoundation
 
+// H1 fix: Add @MainActor to ensure all mutable state (players dict, isEnabled)
+// is accessed only from the Main Thread. All callers are UI-driven.
+@MainActor
 @Observable
 final class SoundManager {
     static let shared = SoundManager()
@@ -18,6 +21,15 @@ final class SoundManager {
         case achievementUnlock = "achievement_unlock"
     }
 
+    // M4 fix: Named constants for system sound IDs
+    private enum SystemSounds {
+        static let positiveTone: SystemSoundID = 1057
+        static let celebrationTone: SystemSoundID = 1025
+        static let tick: SystemSoundID = 1104
+        static let thud: SystemSoundID = 1052
+        static let ding: SystemSoundID = 1054
+    }
+
     private init() {
         configureAudioSession()
     }
@@ -27,7 +39,8 @@ final class SoundManager {
             try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default, options: .mixWithOthers)
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            // Audio session configuration is best-effort
+            // M1 fix: Log audio session errors instead of silencing
+            print("SparkDo [SoundManager]: Audio session setup failed: \(error)")
         }
     }
 
@@ -54,6 +67,8 @@ final class SoundManager {
                     player.play()
                     return
                 } catch {
+                    // M1 fix: Log load errors
+                    print("SparkDo [SoundManager]: Failed to load \(sound.rawValue).\(ext): \(error)")
                     continue
                 }
             }
@@ -67,15 +82,15 @@ final class SoundManager {
         let systemSoundID: SystemSoundID
         switch sound {
         case .questComplete, .sparkEarned:
-            systemSoundID = 1057 // short positive tone
+            systemSoundID = SystemSounds.positiveTone
         case .levelUp, .sprintComplete, .achievementUnlock:
-            systemSoundID = 1025 // celebration-like tone
+            systemSoundID = SystemSounds.celebrationTone
         case .wheelTick:
-            systemSoundID = 1104 // tick
+            systemSoundID = SystemSounds.tick
         case .wheelLand:
-            systemSoundID = 1052 // thud
+            systemSoundID = SystemSounds.thud
         case .rapidCaptureDing:
-            systemSoundID = 1054 // ding
+            systemSoundID = SystemSounds.ding
         }
         AudioServicesPlaySystemSound(systemSoundID)
     }

@@ -1,5 +1,8 @@
 import UIKit
 
+// H2 fix: @MainActor ensures isEnabled and all haptic calls are Main Thread only.
+// M2 fix: Replace DispatchQueue.main.asyncAfter with Task.sleep.
+@MainActor
 enum HapticsManager {
     static var isEnabled = true
 
@@ -26,7 +29,8 @@ enum HapticsManager {
         let generator = UINotificationFeedbackGenerator()
         // Double success for level up
         generator.notificationOccurred(.success)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+        Task {
+            try? await Task.sleep(for: .milliseconds(150))
             generator.notificationOccurred(.success)
         }
     }

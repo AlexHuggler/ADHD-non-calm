@@ -141,25 +141,26 @@ struct RapidCaptureView: View {
 
     // MARK: - Add Quests
 
+    // M2 fix: Use structured concurrency instead of DispatchQueue.main.asyncAfter
     private func addAllQuests() {
         isAdding = true
 
-        for (index, (title, xp)) in parsedQuests.enumerated() {
-            let delay = Double(index) * 0.1
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        Task {
+            for (index, (title, xp)) in parsedQuests.enumerated() {
+                if index > 0 {
+                    try? await Task.sleep(for: .milliseconds(100))
+                }
+
                 let quest = Quest(title: title, xpValue: xp)
                 modelContext.insert(quest)
 
                 addedCount += 1
                 HapticsManager.buttonTap()
                 SoundManager.shared.play(.rapidCaptureDing)
-
-                if addedCount == parsedQuests.count {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        dismiss()
-                    }
-                }
             }
+
+            try? await Task.sleep(for: .milliseconds(300))
+            dismiss()
         }
     }
 }

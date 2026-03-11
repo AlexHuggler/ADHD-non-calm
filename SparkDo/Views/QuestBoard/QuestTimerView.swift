@@ -60,6 +60,11 @@ struct QuestTimerView: View {
             }
         }
         .confetti(isActive: $showConfetti)
+        .onDisappear {
+            // C2 fix: Ensure timer is invalidated when view is dismissed to prevent
+            // leaked timer firing into deallocated state.
+            stopTimer()
+        }
     }
 
     // MARK: - Duration Picker
@@ -132,51 +137,51 @@ struct QuestTimerView: View {
                 .font(SparkTypography.subheading(16))
                 .foregroundStyle(SparkTheme.secondaryText)
 
-            // Circular timer
-            ZStack {
-                // Background circle
-                Circle()
-                    .stroke(SparkTheme.cardBackground, lineWidth: 8)
-                    .frame(width: 220, height: 220)
-
-                // Progress circle
-                Circle()
-                    .trim(from: 0, to: progress)
-                    .stroke(
-                        SparkTheme.primaryGradient,
-                        style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                    )
-                    .frame(width: 220, height: 220)
-                    .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 1), value: progress)
-
-                // Time display
-                VStack(spacing: 4) {
-                    Text(timeString)
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
-                        .foregroundStyle(SparkTheme.primaryText)
-                        .monospacedDigit()
-
-                    Text("remaining")
-                        .font(SparkTypography.caption())
-                        .foregroundStyle(SparkTheme.tertiaryText)
-                }
-
-                // Motivational pulse
-                if !reduceMotion {
+            // H9 fix: Use GeometryReader for responsive timer sizing
+            GeometryReader { geo in
+                let timerSize = min(geo.size.width, geo.size.height) * 0.65
+                ZStack {
                     Circle()
-                        .fill(SparkTheme.electricPurple.opacity(0.1))
-                        .frame(width: 240, height: 240)
-                        .scaleEffect(pulseScale)
-                        .animation(
-                            .easeInOut(duration: 2).repeatForever(autoreverses: true),
-                            value: pulseScale
+                        .stroke(SparkTheme.cardBackground, lineWidth: 8)
+                        .frame(width: timerSize, height: timerSize)
+
+                    Circle()
+                        .trim(from: 0, to: progress)
+                        .stroke(
+                            SparkTheme.primaryGradient,
+                            style: StrokeStyle(lineWidth: 8, lineCap: .round)
                         )
+                        .frame(width: timerSize, height: timerSize)
+                        .rotationEffect(.degrees(-90))
+                        .animation(.linear(duration: 1), value: progress)
+
+                    VStack(spacing: 4) {
+                        Text(timeString)
+                            .font(.system(size: 48, weight: .bold, design: .rounded))
+                            .foregroundStyle(SparkTheme.primaryText)
+                            .monospacedDigit()
+                            .accessibilityLabel("Time remaining: \(timeString)")
+
+                        Text("remaining")
+                            .font(SparkTypography.caption())
+                            .foregroundStyle(SparkTheme.tertiaryText)
+                    }
+
+                    if !reduceMotion {
+                        Circle()
+                            .fill(SparkTheme.electricPurple.opacity(0.1))
+                            .frame(width: timerSize + 20, height: timerSize + 20)
+                            .scaleEffect(pulseScale)
+                            .animation(
+                                .easeInOut(duration: 2).repeatForever(autoreverses: true),
+                                value: pulseScale
+                            )
+                    }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .onAppear { pulseScale = 1.1 }
             }
-            .onAppear {
-                pulseScale = 1.1
-            }
+            .aspectRatio(1, contentMode: .fit)
 
             // Spark bonus display
             HStack(spacing: 4) {
