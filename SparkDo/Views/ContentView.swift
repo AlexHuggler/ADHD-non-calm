@@ -1,0 +1,195 @@
+import SwiftUI
+
+struct ContentView: View {
+    @Bindable var appState: AppState
+
+    @State private var selectedTab = 0
+    @State private var showRapidCapture = false
+    @State private var showQuestCraft = false
+    @State private var showSpinWheel = false
+    @State private var showSprint = false
+    @State private var selectedQuestForSprint: Quest?
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            TabView(selection: $selectedTab) {
+                // Dashboard
+                NavigationStack {
+                    DashboardView(
+                        profile: appState.profile,
+                        streak: appState.streak,
+                        challenge: appState.todayChallenge,
+                        todaySparks: appState.todaySparks,
+                        onPickQuest: { selectedTab = 1 },
+                        onSpin: { showSpinWheel = true },
+                        onSprint: {
+                            let quests = appState.questSurfacing.fetchActiveQuests()
+                            if let first = quests.first {
+                                selectedQuestForSprint = first
+                                showSprint = true
+                            }
+                        }
+                    )
+                }
+                .tabItem {
+                    Label("Home", systemImage: "house.fill")
+                }
+                .tag(0)
+
+                // Quest Board
+                NavigationStack {
+                    QuestBoardView(
+                        sparkEngine: appState.sparkEngine,
+                        profile: appState.profile,
+                        questSurfacing: appState.questSurfacing
+                    )
+                }
+                .tabItem {
+                    Label("Quests", systemImage: "list.bullet.rectangle.fill")
+                }
+                .tag(1)
+
+                // Center placeholder for floating button
+                Color.clear
+                    .tabItem {
+                        Label("", systemImage: "plus")
+                    }
+                    .tag(2)
+
+                // Progress
+                NavigationStack {
+                    ProgressTabView(profile: appState.profile, streak: appState.streak, sparkEngine: appState.sparkEngine)
+                }
+                .tabItem {
+                    Label("Progress", systemImage: "map.fill")
+                }
+                .tag(3)
+
+                // Settings
+                NavigationStack {
+                    SettingsView(profile: appState.profile)
+                }
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape.fill")
+                }
+                .tag(4)
+            }
+            .tint(SparkTheme.electricPurple)
+
+            // Floating capture button
+            captureButton
+        }
+        .preferredColorScheme(.dark)
+        .sheet(isPresented: $showRapidCapture) {
+            RapidCaptureView()
+        }
+        .sheet(isPresented: $showQuestCraft) {
+            QuestCraftView()
+        }
+        .sheet(isPresented: $showSpinWheel) {
+            SpinWheelView(
+                quests: appState.questSurfacing.fetchQuestsForWheel(),
+                onQuestSelected: { quest in
+                    showSpinWheel = false
+                    selectedQuestForSprint = quest
+                    showSprint = true
+                }
+            )
+        }
+        .fullScreenCover(isPresented: $showSprint) {
+            if let quest = selectedQuestForSprint {
+                QuestTimerView(
+                    quest: quest,
+                    sparkEngine: appState.sparkEngine,
+                    profile: appState.profile,
+                    onComplete: {
+                        showSprint = false
+                        appState.streakManager.recordActivity(streak: appState.streak)
+                    },
+                    onCancel: {
+                        showSprint = false
+                    }
+                )
+            }
+        }
+        .onChange(of: selectedTab) { _, newValue in
+            if newValue == 2 {
+                // Intercept center tab — show capture options
+                selectedTab = 0
+                showCaptureOptions()
+            }
+        }
+    }
+
+    // MARK: - Floating Capture Button
+
+    private var captureButton: some View {
+        Button {
+            showCaptureOptions()
+            HapticsManager.buttonTap()
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(SparkTheme.electricPurple)
+                    .frame(width: 56, height: 56)
+                    .shadow(color: SparkTheme.electricPurple.opacity(0.4), radius: 8, y: 2)
+
+                Image(systemName: "plus")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+        }
+        .offset(y: -26)
+    }
+
+    private func showCaptureOptions() {
+        // For simplicity, show rapid capture by default
+        // A more refined version could show a menu with both options
+        showRapidCapture = true
+    }
+}
+
+// MARK: - Progress Tab
+
+struct ProgressTabView: View {
+    @Bindable var profile: PlayerProfile
+    let streak: Streak
+    var sparkEngine: SparkEngine
+
+    var body: some View {
+        List {
+            NavigationLink {
+                ProgressMapView(profile: profile)
+            } label: {
+                Label("Journey Map", systemImage: "map.fill")
+                    .foregroundStyle(SparkTheme.primaryText)
+            }
+            .listRowBackground(SparkTheme.cardBackground)
+
+            NavigationLink {
+                AchievementsView()
+            } label: {
+                Label("Achievements", systemImage: "trophy.fill")
+                    .foregroundStyle(SparkTheme.primaryText)
+            }
+            .listRowBackground(SparkTheme.cardBackground)
+
+            NavigationLink {
+                PowerUpShopView(
+                    profile: profile,
+                    sparkEngine: sparkEngine
+                )
+            } label: {
+                Label("Power-Up Shop", systemImage: "bag.fill")
+                    .foregroundStyle(SparkTheme.primaryText)
+            }
+            .listRowBackground(SparkTheme.cardBackground)
+        }
+        .scrollContentBackground(.hidden)
+        .background(SparkTheme.darkBackground)
+        .navigationTitle("Progress")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .foregroundStyle(SparkTheme.primaryText)
+    }
+}
