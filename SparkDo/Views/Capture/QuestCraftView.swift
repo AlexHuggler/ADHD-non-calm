@@ -69,6 +69,13 @@ struct QuestCraftView: View {
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                                         .fill(SparkTheme.surfaceBackground)
                                 )
+
+                            if !title.isEmpty {
+                                Text("\(title.count)")
+                                    .font(SparkTypography.caption(11))
+                                    .foregroundStyle(SparkTheme.tertiaryText)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                            }
                         }
 
                         // XP Slider
@@ -238,21 +245,41 @@ struct QuestCraftView: View {
                         }
 
                         // Create button
-                        Button {
-                            createQuest()
-                        } label: {
-                            Text("Create Quest")
-                                .font(SparkTypography.subheading())
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .fill(title.isEmpty ? SparkTheme.tertiaryText : SparkTheme.electricPurple)
-                                )
-                                .glow(color: title.isEmpty ? .clear : SparkTheme.electricPurple, radius: 6)
+                        ZStack {
+                            Button {
+                                createQuest()
+                            } label: {
+                                Text("Create Quest")
+                                    .font(SparkTypography.subheading())
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                            .fill(title.isEmpty ? SparkTheme.tertiaryText : SparkTheme.electricPurple)
+                                    )
+                                    .glow(color: title.isEmpty ? .clear : SparkTheme.electricPurple, radius: 6)
+                            }
+                            .disabled(title.isEmpty)
+                            .sparkPressEffect()
+
+                            // Invisible tap target for disabled state feedback
+                            if title.isEmpty {
+                                Color.clear
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        withAnimation(.default.speed(3).repeatCount(3, autoreverses: true)) {
+                                            showValidationShake = true
+                                        }
+                                        HapticsManager.validationError()
+                                        Task {
+                                            try? await Task.sleep(for: .milliseconds(400))
+                                            showValidationShake = false
+                                        }
+                                    }
+                            }
                         }
-                        .disabled(title.isEmpty)
+                        .offset(x: showValidationShake ? -6 : 0)
                     }
                     .padding()
                     .animation(.spring(response: 0.5, dampingFraction: 0.7), value: isEpic)

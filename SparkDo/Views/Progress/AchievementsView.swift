@@ -121,6 +121,7 @@ struct AchievementBadge: View {
                     Image(systemName: "questionmark")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(SparkTheme.tertiaryText)
+                        .accessibilityLabel("Locked achievement")
                 }
 
                 if achievement.isUnlocked {

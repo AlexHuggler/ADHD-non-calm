@@ -113,6 +113,7 @@ struct ContentView: View {
                         showSprint = false
                     }
                 )
+                .interactiveDismissDisabled(true)
             }
         }
         .onChange(of: selectedTab) { _, newValue in

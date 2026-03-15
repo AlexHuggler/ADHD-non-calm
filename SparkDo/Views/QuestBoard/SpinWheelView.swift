@@ -59,6 +59,7 @@ struct SpinWheelView: View {
                     .font(.system(size: 24))
                     .foregroundStyle(SparkTheme.sunshineYellow)
                     .glow(color: SparkTheme.sunshineYellow, radius: 8)
+                    .accessibilityLabel("Wheel pointer")
 
                 // H8 fix: Use GeometryReader for responsive wheel sizing instead of hardcoded 280
                 GeometryReader { geo in

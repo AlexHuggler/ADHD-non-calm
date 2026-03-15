@@ -6,9 +6,6 @@ struct SparkCounterView: View {
     let level: Int
     let levelProgress: Double
 
-    @State private var displayedSparks: Int = 0
-    @State private var animateGlow = false
-
     var body: some View {
         VStack(spacing: 12) {
             HStack(spacing: 8) {
@@ -18,10 +15,7 @@ struct SparkCounterView: View {
                     .pulseGlow(color: SparkTheme.sunshineYellow)
                     .accessibilityHidden(true)
 
-                Text("\(displayedSparks)")
-                    .font(SparkTypography.heading(36))
-                    .foregroundStyle(SparkTheme.primaryText)
-                    .contentTransition(.numericText())
+                AnimatedCounter(value: totalSparks)
             }
 
             Text("+\(todaySparks) today")
@@ -49,7 +43,7 @@ struct SparkCounterView: View {
         }
         .padding(20)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Level \(level), \(displayedSparks) total sparks, plus \(todaySparks) today")
+        .accessibilityLabel("Level \(level), \(totalSparks) total sparks, plus \(todaySparks) today")
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(SparkTheme.surfaceBackground)
@@ -58,16 +52,7 @@ struct SparkCounterView: View {
                         .stroke(SparkTheme.electricPurple.opacity(0.3), lineWidth: 1)
                 )
         )
-        .onAppear {
-            withAnimation(.easeOut(duration: 0.6)) {
-                displayedSparks = totalSparks
-            }
-        }
-        .onChange(of: totalSparks) { _, newValue in
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
-                displayedSparks = newValue
-            }
-        }
+        .animation(.spring(response: 0.5, dampingFraction: 0.7), value: totalSparks)
     }
 }
 
