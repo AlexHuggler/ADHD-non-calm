@@ -10,6 +10,7 @@ struct PowerUpShopView: View {
     @State private var showPurchaseConfirm = false
     @State private var selectedPowerUp: PowerUp?
     @State private var showConfetti = false
+    @State private var showPurchaseToast = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -72,6 +73,7 @@ struct PowerUpShopView: View {
         .navigationBarTitleDisplayMode(.large)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .confetti(isActive: $showConfetti)
+        .toast(isPresented: $showPurchaseToast, icon: "bag.fill", message: "Power-up activated!")
         .alert("Purchase Power-Up?", isPresented: $showPurchaseConfirm) {
             Button("Cancel", role: .cancel) {}
             Button("Buy for \(selectedPowerUp?.sparkCost ?? 0) Sparks") {
@@ -100,6 +102,7 @@ struct PowerUpShopView: View {
         HapticsManager.purchaseSuccess()
         SoundManager.shared.play(.achievementUnlock)
         showConfetti = true
+        showPurchaseToast = true
     }
 }
 

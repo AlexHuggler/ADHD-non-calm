@@ -37,6 +37,7 @@ struct DailyChallengeCard: View {
                                 Capsule()
                                     .fill(SparkTheme.coral.opacity(0.2))
                             )
+                            .accessibilityLabel("Triple sparks bonus")
                     }
                 }
 

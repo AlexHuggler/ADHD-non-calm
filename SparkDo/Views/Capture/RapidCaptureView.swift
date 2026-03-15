@@ -9,6 +9,7 @@ struct RapidCaptureView: View {
     @State private var parsedQuests: [(String, Int)] = []
     @State private var isAdding = false
     @State private var addedCount = 0
+    @State private var showShortEntryWarning = false
     @FocusState private var isInputFocused: Bool
 
     var body: some View {
@@ -75,6 +76,13 @@ struct RapidCaptureView: View {
                             }
                         }
 
+                        if showShortEntryWarning {
+                            Text("Quests need at least 2 characters")
+                                .font(SparkTypography.caption(12))
+                                .foregroundStyle(SparkTheme.coral)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
+
                         // Add all button
                         Button {
                             addAllQuests()
@@ -93,6 +101,7 @@ struct RapidCaptureView: View {
                             )
                             .glow(color: SparkTheme.electricPurple, radius: 8)
                         }
+                        .sparkPressEffect()
                         .disabled(isAdding)
                     }
                 }
@@ -116,12 +125,26 @@ struct RapidCaptureView: View {
     // MARK: - Parsing
 
     private func parseQuests(from text: String) {
-        let lines = text.components(separatedBy: .newlines)
+        let allLines = text.components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { $0.count >= 2 }
+            .filter { !$0.isEmpty }
+        let validLines = allLines.filter { $0.count >= 2 }
+
+        // Show warning if any lines were too short
+        let hasShortEntries = allLines.count > validLines.count
+        if hasShortEntries && !showShortEntryWarning {
+            HapticsManager.validationError()
+            withAnimation { showShortEntryWarning = true }
+            Task {
+                try? await Task.sleep(for: .seconds(3))
+                withAnimation { showShortEntryWarning = false }
+            }
+        } else if !hasShortEntries {
+            withAnimation { showShortEntryWarning = false }
+        }
 
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-            parsedQuests = lines.map { line in
+            parsedQuests = validLines.map { line in
                 (line, Quest.autoXP(for: line))
             }
         }

@@ -105,7 +105,7 @@ struct QuestCardView: View {
                         )
                 )
             }
-            .buttonStyle(.plain)
+            .sparkPressEffect()
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(quest.title), \(quest.xpValue) XP, \(quest.energyLevel.label)")
             .accessibilityHint("Tap to start sprint. Swipe right to complete, left to skip.")

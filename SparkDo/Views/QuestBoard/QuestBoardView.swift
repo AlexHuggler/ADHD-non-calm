@@ -112,6 +112,7 @@ struct QuestBoardView: View {
                         showQuestTimer = false
                     }
                 )
+                .interactiveDismissDisabled(true)
             }
         }
         .sheet(isPresented: $showRapidCapture) {
