@@ -48,10 +48,11 @@ struct SpinWheelView: View {
             Spacer()
 
             if quests.isEmpty {
-                Text("No quests to spin!\nAdd some quests first.")
-                    .font(SparkTypography.body())
-                    .foregroundStyle(SparkTheme.secondaryText)
-                    .multilineTextAlignment(.center)
+                EmptyStateView(
+                    icon: "circle.dotted",
+                    title: "No quests to spin!",
+                    message: "Add some quests first."
+                )
             } else {
                 // Pointer
                 Image(systemName: "arrowtriangle.down.fill")

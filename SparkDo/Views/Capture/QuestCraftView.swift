@@ -14,6 +14,7 @@ struct QuestCraftView: View {
     @State private var epicMotivation = ""
     @State private var isQuestChain = false
     @State private var chainSteps: [String] = [""]
+    @State private var showValidationShake = false
 
     private let timeOptions = [5, 10, 15, 30, 60]
 
@@ -24,6 +25,36 @@ struct QuestCraftView: View {
 
                 ScrollView {
                     VStack(spacing: 20) {
+                        // Quick Templates
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 10) {
+                                QuestTemplateChip(label: "Quick Task", icon: "hare") {
+                                    title = title.isEmpty ? "Quick Task" : title
+                                    xpValue = 10
+                                    energyLevel = .low
+                                    estimatedMinutes = 5
+                                    HapticsManager.buttonTap()
+                                }
+
+                                QuestTemplateChip(label: "Focus Block", icon: "brain.head.profile") {
+                                    title = title.isEmpty ? "Focus Block" : title
+                                    xpValue = 50
+                                    energyLevel = .medium
+                                    estimatedMinutes = 25
+                                    HapticsManager.buttonTap()
+                                }
+
+                                QuestTemplateChip(label: "Deep Work", icon: "mountain.2") {
+                                    title = title.isEmpty ? "Deep Work" : title
+                                    xpValue = 100
+                                    energyLevel = .high
+                                    estimatedMinutes = 60
+                                    isEpic = true
+                                    HapticsManager.buttonTap()
+                                }
+                            }
+                        }
+
                         // Title
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Quest Name")
@@ -110,6 +141,15 @@ struct QuestCraftView: View {
                                 ForEach(timeOptions, id: \.self) { minutes in
                                     Button {
                                         estimatedMinutes = minutes
+                                        // Auto-suggest XP based on time
+                                        switch minutes {
+                                        case 5: xpValue = 10
+                                        case 10: xpValue = 20
+                                        case 15: xpValue = 25
+                                        case 30: xpValue = 50
+                                        case 60: xpValue = 100
+                                        default: break
+                                        }
                                         HapticsManager.buttonTap()
                                     } label: {
                                         Text("\(minutes)m")
@@ -219,6 +259,17 @@ struct QuestCraftView: View {
                     .animation(.spring(response: 0.5, dampingFraction: 0.7), value: isQuestChain)
                 }
             }
+            .onAppear {
+                // Smart defaults based on time of day
+                let hour = Calendar.current.component(.hour, from: Date())
+                if hour < 11 {
+                    energyLevel = .low
+                } else if hour < 17 {
+                    energyLevel = .medium
+                } else {
+                    energyLevel = .low
+                }
+            }
             .navigationTitle("Craft a Quest")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarColorScheme(.dark, for: .navigationBar)
@@ -313,6 +364,34 @@ struct QuestCraftView: View {
         HapticsManager.questComplete()
         SoundManager.shared.play(.questComplete)
         dismiss()
+    }
+}
+
+struct QuestTemplateChip: View {
+    let label: String
+    let icon: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 12))
+                Text(label)
+                    .font(SparkTypography.caption(12))
+            }
+            .foregroundStyle(SparkTheme.secondaryText)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(SparkTheme.cardBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .stroke(SparkTheme.tertiaryText.opacity(0.3), lineWidth: 1)
+                    )
+            )
+        }
     }
 }
 

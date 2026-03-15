@@ -98,12 +98,24 @@ enum SparkTypography {
 
 struct SparkCardStyle: ViewModifier {
     var color: Color = SparkTheme.cardBackground
+    var borderColor: Color? = nil
+    var cornerRadius: CGFloat = 16
 
     func body(content: Content) -> some View {
         content
             .padding(16)
-            .background(color)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(color)
+                    .overlay(
+                        Group {
+                            if let borderColor {
+                                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                                    .stroke(borderColor.opacity(0.3), lineWidth: 1)
+                            }
+                        }
+                    )
+            )
     }
 }
 
@@ -118,11 +130,28 @@ struct GlowEffect: ViewModifier {
 }
 
 extension View {
-    func sparkCard(color: Color = SparkTheme.cardBackground) -> some View {
-        modifier(SparkCardStyle(color: color))
+    func sparkCard(color: Color = SparkTheme.cardBackground, borderColor: Color? = nil, cornerRadius: CGFloat = 16) -> some View {
+        modifier(SparkCardStyle(color: color, borderColor: borderColor, cornerRadius: cornerRadius))
     }
 
     func glow(color: Color = SparkTheme.electricPurple, radius: CGFloat = 10) -> some View {
         modifier(GlowEffect(color: color, radius: radius))
+    }
+}
+
+// MARK: - Button Style
+
+struct SparkPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .opacity(configuration.isPressed ? 0.9 : 1)
+            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
+    }
+}
+
+extension View {
+    func sparkPressEffect() -> some View {
+        buttonStyle(SparkPressStyle())
     }
 }

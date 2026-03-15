@@ -79,13 +79,7 @@ struct QuestTimerView: View {
                     .multilineTextAlignment(.center)
 
                 HStack(spacing: 16) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "bolt.fill")
-                            .font(.system(size: 12))
-                        Text("\(quest.xpValue) XP")
-                            .font(SparkTypography.caption(13))
-                    }
-                    .foregroundStyle(SparkTheme.sunshineYellow)
+                    XPBadge(value: quest.xpValue, size: .medium)
 
                     HStack(spacing: 4) {
                         Image(systemName: "clock")
@@ -140,11 +134,7 @@ struct QuestTimerView: View {
 
             // Spark bonus preview
             HStack(spacing: 4) {
-                Image(systemName: "bolt.fill")
-                    .foregroundStyle(SparkTheme.sunshineYellow)
-                Text("\(quest.xpValue * 2) Sparks (2x sprint bonus)")
-                    .font(SparkTypography.caption())
-                    .foregroundStyle(SparkTheme.sunshineYellow)
+                XPBadge(value: quest.xpValue * 2, suffix: "Sparks (2x sprint bonus)", size: .medium)
             }
 
             Button {
@@ -220,13 +210,7 @@ struct QuestTimerView: View {
             .aspectRatio(1, contentMode: .fit)
 
             // Spark bonus display
-            HStack(spacing: 4) {
-                Image(systemName: "bolt.fill")
-                    .foregroundStyle(SparkTheme.sunshineYellow)
-                Text("+\(quest.xpValue * 2) Sparks on completion")
-                    .font(SparkTypography.caption())
-                    .foregroundStyle(SparkTheme.sunshineYellow)
-            }
+            XPBadge(value: quest.xpValue * 2, suffix: "Sparks on completion", size: .medium)
         }
     }
 
@@ -247,13 +231,7 @@ struct QuestTimerView: View {
                 .font(SparkTypography.body())
                 .foregroundStyle(SparkTheme.secondaryText)
 
-            HStack(spacing: 4) {
-                Image(systemName: "bolt.fill")
-                    .foregroundStyle(SparkTheme.sunshineYellow)
-                Text("+\(quest.xpValue * 2) Sparks earned!")
-                    .font(SparkTypography.subheading())
-                    .foregroundStyle(SparkTheme.sunshineYellow)
-            }
+            XPBadge(value: quest.xpValue * 2, suffix: "Sparks earned!", size: .large)
             .shimmer(color: SparkTheme.sunshineYellow)
 
             VStack(spacing: 12) {

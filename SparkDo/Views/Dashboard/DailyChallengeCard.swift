@@ -50,18 +50,12 @@ struct DailyChallengeCard: View {
 
                 if !challenge.isCompleted {
                     // Progress bar
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            Capsule()
-                                .fill(Color.white.opacity(0.1))
-                                .frame(height: 4)
-
-                            Capsule()
-                                .fill(SparkTheme.sunshineYellow)
-                                .frame(width: geo.size.width * challenge.progress, height: 4)
-                        }
-                    }
-                    .frame(height: 4)
+                    SparkProgressBar(
+                        progress: challenge.progress,
+                        height: 4,
+                        fillStyle: AnyShapeStyle(SparkTheme.sunshineYellow),
+                        trackColor: Color.white.opacity(0.1)
+                    )
 
                     Text("\(challenge.currentCount)/\(challenge.targetCount)")
                         .font(SparkTypography.caption(12))

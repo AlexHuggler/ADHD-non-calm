@@ -46,4 +46,35 @@ enum HapticsManager {
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(.error)
     }
+
+    static func streakRecord() {
+        guard isEnabled else { return }
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+        Task {
+            try? await Task.sleep(for: .milliseconds(100))
+            let gen2 = UIImpactFeedbackGenerator(style: .heavy)
+            gen2.impactOccurred()
+            try? await Task.sleep(for: .milliseconds(100))
+            let gen3 = UINotificationFeedbackGenerator()
+            gen3.notificationOccurred(.success)
+        }
+    }
+
+    static func purchaseSuccess() {
+        guard isEnabled else { return }
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+        Task {
+            try? await Task.sleep(for: .milliseconds(200))
+            let gen = UIImpactFeedbackGenerator(style: .heavy)
+            gen.impactOccurred()
+        }
+    }
+
+    static func validationError() {
+        guard isEnabled else { return }
+        let generator = UIImpactFeedbackGenerator(style: .rigid)
+        generator.impactOccurred()
+    }
 }

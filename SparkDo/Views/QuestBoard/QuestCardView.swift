@@ -31,6 +31,7 @@ struct QuestCardView: View {
                     .font(.system(size: 30))
                     .foregroundStyle(SparkTheme.mintGreen)
                     .opacity(offset > 50 ? 1 : 0)
+                    .accessibilityLabel("Complete quest")
 
                 Spacer()
 
@@ -39,6 +40,7 @@ struct QuestCardView: View {
                     .font(.system(size: 30))
                     .foregroundStyle(SparkTheme.tertiaryText)
                     .opacity(offset < -50 ? 1 : 0)
+                    .accessibilityLabel("Skip quest")
             }
             .padding(.horizontal, 20)
 
@@ -58,15 +60,7 @@ struct QuestCardView: View {
 
                         HStack(spacing: 12) {
                             // XP value
-                            HStack(spacing: 4) {
-                                Image(systemName: "bolt.fill")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(SparkTheme.sunshineYellow)
-
-                                Text("\(quest.xpValue) XP")
-                                    .font(SparkTypography.caption(12))
-                                    .foregroundStyle(SparkTheme.sunshineYellow)
-                            }
+                            XPBadge(value: quest.xpValue)
 
                             // Estimated time
                             HStack(spacing: 4) {
@@ -98,6 +92,7 @@ struct QuestCardView: View {
                         Image(systemName: "star.fill")
                             .font(.system(size: 14))
                             .foregroundStyle(SparkTheme.sunshineYellow)
+                            .accessibilityLabel("Epic quest")
                     }
                 }
                 .padding(16)
@@ -111,6 +106,9 @@ struct QuestCardView: View {
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(quest.title), \(quest.xpValue) XP, \(quest.energyLevel.label)")
+            .accessibilityHint("Tap to start sprint. Swipe right to complete, left to skip.")
             .offset(x: offset)
             .offset(y: reduceMotion ? 0 : (bobPhase ? -1.5 : 1.5))
             .gesture(
