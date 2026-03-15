@@ -5,9 +5,13 @@ struct DailyChallengeCard: View {
     var onTap: () -> Void = {}
 
     @State private var appear = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        Button(action: onTap) {
+        Button(action: {
+            HapticsManager.buttonTap()
+            onTap()
+        }) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     Image(systemName: "star.circle.fill")
@@ -83,11 +87,17 @@ struct DailyChallengeCard: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Daily Challenge: \(challenge.title)")
+        .accessibilityHint("Tap to view details")
         .scaleEffect(appear ? 1 : 0.95)
         .opacity(appear ? 1 : 0)
         .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+            if reduceMotion {
                 appear = true
+            } else {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                    appear = true
+                }
             }
         }
     }

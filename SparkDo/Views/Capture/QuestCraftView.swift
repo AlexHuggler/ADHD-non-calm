@@ -335,11 +335,13 @@ struct QuestCraftView: View {
 
                     if chainSteps.count > 1 {
                         Button {
+                            HapticsManager.buttonTap()
                             chainSteps.remove(at: index)
                         } label: {
                             Image(systemName: "minus.circle.fill")
                                 .foregroundStyle(SparkTheme.coral)
                         }
+                        .accessibilityLabel("Remove step \(index + 1)")
                     }
                 }
             }
@@ -355,6 +357,7 @@ struct QuestCraftView: View {
                 .font(SparkTypography.caption())
                 .foregroundStyle(SparkTheme.teal)
             }
+            .accessibilityLabel("Add step")
         }
     }
 

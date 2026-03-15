@@ -11,6 +11,7 @@ struct PowerUpShopView: View {
     @State private var selectedPowerUp: PowerUp?
     @State private var showConfetti = false
     @State private var showPurchaseToast = false
+    @State private var showPurchaseFailure = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -74,6 +75,11 @@ struct PowerUpShopView: View {
         .toolbarColorScheme(.dark, for: .navigationBar)
         .confetti(isActive: $showConfetti)
         .toast(isPresented: $showPurchaseToast, icon: "bag.fill", message: "Power-up activated!")
+        .alert("Not Enough Sparks", isPresented: $showPurchaseFailure) {
+            Button("OK") {}
+        } message: {
+            Text("You need more Sparks to purchase this power-up.")
+        }
         .alert("Purchase Power-Up?", isPresented: $showPurchaseConfirm) {
             Button("Cancel", role: .cancel) {}
             Button("Buy for \(selectedPowerUp?.sparkCost ?? 0) Sparks") {
@@ -95,6 +101,7 @@ struct PowerUpShopView: View {
     private func purchasePowerUp(_ powerUp: PowerUp) {
         guard sparkEngine.spendSparks(powerUp.sparkCost, profile: profile) else {
             HapticsManager.error()
+            showPurchaseFailure = true
             return
         }
 
@@ -168,6 +175,8 @@ struct PowerUpCard: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(powerUp.name), \(powerUp.sparkCost) sparks")
+        .accessibilityHint(powerUp.isPurchased ? "Already owned" : (canAfford ? "Double tap to purchase" : "Not enough sparks"))
         .opacity(powerUp.isPurchased ? 0.7 : 1)
     }
 }
