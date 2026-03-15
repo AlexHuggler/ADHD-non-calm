@@ -139,6 +139,7 @@ struct QuickActionButton: View {
         .buttonStyle(.plain)
         .scaleEffect(isPressed ? 0.95 : 1)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
+        .accessibilityLabel(title)
     }
 }
 
@@ -166,15 +167,7 @@ struct RecentWinCard: View {
                 .foregroundStyle(SparkTheme.primaryText)
                 .lineLimit(2)
 
-            HStack(spacing: 4) {
-                Image(systemName: "bolt.fill")
-                    .font(.system(size: 10))
-                    .foregroundStyle(SparkTheme.sunshineYellow)
-
-                Text("\(quest.xpValue)")
-                    .font(SparkTypography.caption(12))
-                    .foregroundStyle(SparkTheme.sunshineYellow)
-            }
+            XPBadge(value: quest.xpValue, suffix: "", size: .small)
         }
         .padding(10)
         .frame(width: 120, alignment: .leading)
@@ -182,5 +175,7 @@ struct RecentWinCard: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(SparkTheme.surfaceBackground)
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(quest.title), \(quest.xpValue) XP")
     }
 }

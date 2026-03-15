@@ -16,6 +16,7 @@ struct SparkCounterView: View {
                     .font(.system(size: 28))
                     .foregroundStyle(SparkTheme.sunshineYellow)
                     .pulseGlow(color: SparkTheme.sunshineYellow)
+                    .accessibilityHidden(true)
 
                 Text("\(displayedSparks)")
                     .font(SparkTypography.heading(36))
@@ -42,22 +43,13 @@ struct SparkCounterView: View {
                     .glow(color: SparkTheme.electricPurple, radius: 6)
 
                 // Progress to next level
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(SparkTheme.cardBackground)
-                            .frame(height: 6)
-
-                        Capsule()
-                            .fill(SparkTheme.primaryGradient)
-                            .frame(width: geo.size.width * levelProgress, height: 6)
-                    }
-                }
-                .frame(height: 6)
+                SparkProgressBar(progress: levelProgress)
             }
             .padding(.horizontal, 4)
         }
         .padding(20)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Level \(level), \(displayedSparks) total sparks, plus \(todaySparks) today")
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(SparkTheme.surfaceBackground)

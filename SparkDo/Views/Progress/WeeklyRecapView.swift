@@ -170,18 +170,11 @@ struct WeeklyRecapView: View {
                 .foregroundStyle(SparkTheme.primaryText)
 
             // Progress bar
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(SparkTheme.cardBackground)
-                        .frame(height: 16)
-
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(SparkTheme.primaryGradient)
-                        .frame(width: geo.size.width * profile.levelProgress, height: 16)
-                }
-            }
-            .frame(height: 16)
+            SparkProgressBar(
+                progress: profile.levelProgress,
+                height: 16,
+                shape: .roundedRect
+            )
             .padding(.horizontal, 40)
 
             Text("\(profile.totalSparks) / \(profile.sparksForNextLevel) Sparks")

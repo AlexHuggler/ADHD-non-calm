@@ -18,20 +18,30 @@ struct RapidCaptureView: View {
 
                 VStack(spacing: 16) {
                     // Input area
-                    TextEditor(text: $inputText)
-                        .font(.system(size: 18, weight: .regular, design: .rounded))
-                        .foregroundStyle(SparkTheme.primaryText)
-                        .scrollContentBackground(.hidden)
-                        .padding(16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(SparkTheme.surfaceBackground)
-                        )
-                        .frame(minHeight: 150)
-                        .focused($isInputFocused)
-                        .onChange(of: inputText) { _, newValue in
-                            parseQuests(from: newValue)
+                    ZStack(alignment: .topLeading) {
+                        if inputText.isEmpty {
+                            Text("Type one quest per line...\n\nDo laundry\nCall dentist\nReview notes\nClean desk")
+                                .font(.system(size: 18, weight: .regular, design: .rounded))
+                                .foregroundStyle(SparkTheme.tertiaryText)
+                                .padding(20)
+                                .allowsHitTesting(false)
                         }
+
+                        TextEditor(text: $inputText)
+                            .font(.system(size: 18, weight: .regular, design: .rounded))
+                            .foregroundStyle(SparkTheme.primaryText)
+                            .scrollContentBackground(.hidden)
+                            .padding(16)
+                            .focused($isInputFocused)
+                            .onChange(of: inputText) { _, newValue in
+                                parseQuests(from: newValue)
+                            }
+                    }
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(SparkTheme.surfaceBackground)
+                    )
+                    .frame(minHeight: 150)
 
                     if !parsedQuests.isEmpty {
                         // Parsed quests preview
@@ -49,19 +59,7 @@ struct RapidCaptureView: View {
                                         Button {
                                             adjustXP(at: index)
                                         } label: {
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "bolt.fill")
-                                                    .font(.system(size: 11))
-                                                Text("\(quest.1)")
-                                                    .font(SparkTypography.caption(13))
-                                            }
-                                            .foregroundStyle(SparkTheme.sunshineYellow)
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 4)
-                                            .background(
-                                                Capsule()
-                                                    .fill(SparkTheme.sunshineYellow.opacity(0.15))
-                                            )
+                                            XPBadgePill(value: quest.1)
                                         }
                                     }
                                     .padding(12)
@@ -120,7 +118,7 @@ struct RapidCaptureView: View {
     private func parseQuests(from text: String) {
         let lines = text.components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
+            .filter { $0.count >= 2 }
 
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
             parsedQuests = lines.map { line in

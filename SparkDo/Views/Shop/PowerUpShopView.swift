@@ -97,7 +97,7 @@ struct PowerUpShopView: View {
         }
 
         powerUp.isPurchased = true
-        HapticsManager.questComplete()
+        HapticsManager.purchaseSuccess()
         SoundManager.shared.play(.achievementUnlock)
         showConfetti = true
     }
@@ -145,13 +145,8 @@ struct PowerUpCard: View {
                         .font(SparkTypography.caption(11))
                         .foregroundStyle(SparkTheme.mintGreen)
                 } else {
-                    HStack(spacing: 4) {
-                        Image(systemName: "bolt.fill")
-                            .font(.system(size: 10))
-                        Text("\(powerUp.sparkCost)")
-                            .font(SparkTypography.caption(12))
-                    }
-                    .foregroundStyle(canAfford ? SparkTheme.sunshineYellow : SparkTheme.tertiaryText)
+                    XPBadge(value: powerUp.sparkCost, suffix: "", size: .small)
+                        .foregroundStyle(canAfford ? SparkTheme.sunshineYellow : SparkTheme.tertiaryText)
                 }
             }
             .padding(12)

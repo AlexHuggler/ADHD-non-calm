@@ -14,6 +14,10 @@ struct QuestBoardView: View {
     @State private var undoTransactions: [SparkTransaction] = []
     @State private var skippedQuests: [Quest] = []
     @State private var showRapidCapture = false
+    @State private var showLevelUp = false
+    @State private var newLevel = 0
+    @State private var showQuestToast = false
+    @State private var sessionCompletedCount = 0
 
     var sparkEngine: SparkEngine
     var profile: PlayerProfile
@@ -45,6 +49,15 @@ struct QuestBoardView: View {
             }
         }
         .confetti(isActive: $showConfetti)
+        .toast(isPresented: $showQuestToast, icon: "checkmark.circle.fill", message: sessionCompletedCount > 1 ? "On fire! \(sessionCompletedCount) quests today!" : "Quest completed!")
+        .overlay {
+            if showLevelUp {
+                LevelUpCelebrationView(newLevel: newLevel) {
+                    showLevelUp = false
+                }
+                .transition(.opacity)
+            }
+        }
         .navigationTitle("Quest Board")
         .navigationBarTitleDisplayMode(.large)
         .toolbarColorScheme(.dark, for: .navigationBar)
@@ -149,40 +162,16 @@ struct QuestBoardView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "trophy.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(SparkTheme.sunshineYellow)
-
-            Text("Quest board is clear!")
-                .font(SparkTypography.heading(24))
-                .foregroundStyle(SparkTheme.primaryText)
-
-            Text("You're a legend.\nTime to capture new adventures.")
-                .font(SparkTypography.body())
-                .foregroundStyle(SparkTheme.secondaryText)
-                .multilineTextAlignment(.center)
-
-            Button {
+        EmptyStateView(
+            icon: "trophy.fill",
+            title: "Quest board is clear!",
+            message: "You're a legend.\nTime to capture new adventures.",
+            iconColor: SparkTheme.sunshineYellow,
+            action: {
                 showRapidCapture = true
-                HapticsManager.buttonTap()
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "plus.circle.fill")
-                    Text("Add a Quest")
-                }
-                .font(SparkTypography.subheading())
-                .foregroundStyle(.white)
-                .padding(.horizontal, 32)
-                .padding(.vertical, 14)
-                .background(
-                    Capsule()
-                        .fill(SparkTheme.electricPurple)
-                )
-                .glow(color: SparkTheme.electricPurple, radius: 8)
-            }
-        }
-        .padding()
+            },
+            actionLabel: "Add a Quest"
+        )
     }
 
     // MARK: - Skipped Section
@@ -264,21 +253,34 @@ struct QuestBoardView: View {
     // MARK: - Actions
 
     private func completeQuest(_ quest: Quest) {
+        let previousLevel = profile.level
         let transactions = sparkEngine.completeQuest(quest, profile: profile)
         withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
             refreshQuests()
         }
         showConfetti = true
+        sessionCompletedCount += 1
+
+        // Level-up check
+        if profile.level > previousLevel {
+            newLevel = profile.level
+            Task {
+                try? await Task.sleep(for: .milliseconds(800))
+                withAnimation { showLevelUp = true }
+            }
+        }
 
         // Show undo toast
         undoQuest = quest
         undoTransactions = transactions
         withAnimation { showUndoToast = true }
 
-        // Auto-dismiss after 5 seconds
+        // Auto-dismiss undo toast, then show quest toast
         Task {
             try? await Task.sleep(for: .seconds(5))
             withAnimation { showUndoToast = false }
+            try? await Task.sleep(for: .milliseconds(300))
+            withAnimation { showQuestToast = true }
         }
     }
 

@@ -82,9 +82,11 @@ struct ContentView: View {
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showRapidCapture) {
             RapidCaptureView()
+                .presentationBackground(SparkTheme.darkBackground)
         }
         .sheet(isPresented: $showQuestCraft) {
             QuestCraftView()
+                .presentationBackground(SparkTheme.darkBackground)
         }
         .sheet(isPresented: $showSpinWheel) {
             SpinWheelView(
@@ -95,6 +97,7 @@ struct ContentView: View {
                     showSprint = true
                 }
             )
+            .presentationBackground(SparkTheme.darkBackground)
         }
         .fullScreenCover(isPresented: $showSprint) {
             if let quest = selectedQuestForSprint {
@@ -151,6 +154,8 @@ struct ContentView: View {
             }
         }
         .offset(y: -26)
+        .accessibilityLabel("Add quest")
+        .accessibilityHint("Opens menu to quickly add or craft a quest")
     }
 
     private func showCaptureOptions() {
