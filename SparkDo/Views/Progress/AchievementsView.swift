@@ -70,6 +70,7 @@ struct AchievementsView: View {
                     LazyVGrid(columns: columns, spacing: 16) {
                         ForEach(filteredAchievements) { achievement in
                             AchievementBadge(achievement: achievement)
+                                .accessibilityHint("Double tap to view details")
                                 .onTapGesture {
                                     selectedAchievement = achievement
                                     showDetail = true
@@ -101,6 +102,7 @@ struct AchievementBadge: View {
     let achievement: Achievement
 
     @State private var appear = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(spacing: 8) {
@@ -148,8 +150,12 @@ struct AchievementBadge: View {
         .opacity(appear ? 1 : 0)
         .scaleEffect(appear ? 1 : 0.8)
         .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+            if reduceMotion {
                 appear = true
+            } else {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                    appear = true
+                }
             }
         }
     }

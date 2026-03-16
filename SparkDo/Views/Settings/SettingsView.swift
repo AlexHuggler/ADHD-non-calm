@@ -46,6 +46,7 @@ struct SettingsView: View {
                         SoundManager.shared.play(.sparkEarned)
                     }
                 }
+                .accessibilityHint("Double tap to toggle sound effects")
 
                 Toggle(isOn: $profile.hapticsEnabled) {
                     Label("Haptics", systemImage: "hand.tap.fill")
@@ -56,6 +57,7 @@ struct SettingsView: View {
                         HapticsManager.buttonTap()
                     }
                 }
+                .accessibilityHint("Double tap to toggle haptic feedback")
             }
             .listRowBackground(SparkTheme.cardBackground)
 
