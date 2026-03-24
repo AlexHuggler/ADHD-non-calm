@@ -15,6 +15,7 @@ struct QuestTimerView: View {
     @State private var showConfetti = false
     @State private var timer: Timer?
     @State private var pulseScale: CGFloat = 1.0
+    @State private var ambientPhase: CGFloat = 0
     @State private var showDurationPicker = true
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -167,6 +168,31 @@ struct QuestTimerView: View {
             GeometryReader { geo in
                 let timerSize = min(geo.size.width, geo.size.height) * 0.65
                 ZStack {
+                    // Ambient focus mode ring
+                    if !reduceMotion {
+                        Circle()
+                            .stroke(
+                                AngularGradient(
+                                    colors: [
+                                        SparkTheme.electricPurple.opacity(0.15),
+                                        SparkTheme.teal.opacity(0.08),
+                                        SparkTheme.electricPurple.opacity(0.15),
+                                    ],
+                                    center: .center,
+                                    startAngle: .degrees(ambientPhase),
+                                    endAngle: .degrees(ambientPhase + 360)
+                                ),
+                                lineWidth: 20
+                            )
+                            .frame(width: timerSize + 30, height: timerSize + 30)
+                            .blur(radius: 8)
+                            .onAppear {
+                                withAnimation(.linear(duration: 8).repeatForever(autoreverses: false)) {
+                                    ambientPhase = 360
+                                }
+                            }
+                    }
+
                     Circle()
                         .stroke(SparkTheme.cardBackground, lineWidth: 8)
                         .frame(width: timerSize, height: timerSize)

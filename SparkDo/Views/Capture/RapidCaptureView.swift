@@ -12,12 +12,52 @@ struct RapidCaptureView: View {
     @State private var showShortEntryWarning = false
     @FocusState private var isInputFocused: Bool
 
+    // Quick template categories for brain dump
+    private let templates: [(String, String, [String])] = [
+        ("Chores", "house.fill", ["Do laundry", "Clean kitchen", "Take out trash", "Vacuum living room"]),
+        ("Work", "briefcase.fill", ["Check emails", "Review PRs", "Update docs", "Team standup"]),
+        ("Health", "heart.fill", ["Drink water", "10 min walk", "Stretch break", "Prep healthy meal"]),
+        ("Errands", "car.fill", ["Grocery run", "Pick up package", "Return item", "Schedule appointment"]),
+        ("Self-care", "leaf.fill", ["Meditate 5 min", "Journal", "Read 10 pages", "Tidy desk"]),
+    ]
+
     var body: some View {
         NavigationStack {
             ZStack {
                 SparkTheme.darkBackground.ignoresSafeArea()
 
                 VStack(spacing: 16) {
+                    // Quick templates row
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(templates, id: \.0) { template in
+                                Button {
+                                    let newText = template.2.joined(separator: "\n")
+                                    inputText = inputText.isEmpty ? newText : inputText + "\n" + newText
+                                    HapticsManager.buttonTap()
+                                } label: {
+                                    HStack(spacing: 5) {
+                                        Image(systemName: template.1)
+                                            .font(.system(size: 11))
+                                        Text(template.0)
+                                            .font(SparkTypography.caption(12))
+                                    }
+                                    .foregroundStyle(SparkTheme.secondaryText)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        Capsule()
+                                            .fill(SparkTheme.cardBackground)
+                                            .overlay(
+                                                Capsule()
+                                                    .stroke(SparkTheme.tertiaryText.opacity(0.3), lineWidth: 1)
+                                            )
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     // Input area
                     ZStack(alignment: .topLeading) {
                         if inputText.isEmpty {
@@ -31,6 +71,7 @@ struct RapidCaptureView: View {
                         TextEditor(text: $inputText)
                             .font(.system(size: 18, weight: .regular, design: .rounded))
                             .foregroundStyle(SparkTheme.primaryText)
+                            .textInputAutocapitalization(.sentences)
                             .scrollContentBackground(.hidden)
                             .padding(16)
                             .focused($isInputFocused)
@@ -172,7 +213,7 @@ struct RapidCaptureView: View {
                     try? await Task.sleep(for: .milliseconds(100))
                 }
 
-                let quest = Quest(title: title, xpValue: xp)
+                let quest = Quest(title: title.trimmingCharacters(in: .whitespaces), xpValue: xp)
                 modelContext.insert(quest)
 
                 addedCount += 1

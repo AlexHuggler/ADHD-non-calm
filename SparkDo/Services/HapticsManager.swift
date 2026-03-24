@@ -77,4 +77,45 @@ enum HapticsManager {
         let generator = UIImpactFeedbackGenerator(style: .rigid)
         generator.impactOccurred()
     }
+
+    static func sprintTick() {
+        guard isEnabled else { return }
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred(intensity: 0.4)
+    }
+
+    static func challengeComplete() {
+        guard isEnabled else { return }
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+        Task {
+            try? await Task.sleep(for: .milliseconds(120))
+            let gen2 = UIImpactFeedbackGenerator(style: .heavy)
+            gen2.impactOccurred()
+            try? await Task.sleep(for: .milliseconds(120))
+            generator.notificationOccurred(.success)
+        }
+    }
+
+    static func achievementUnlock() {
+        guard isEnabled else { return }
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.impactOccurred()
+        Task {
+            try? await Task.sleep(for: .milliseconds(100))
+            let gen2 = UIImpactFeedbackGenerator(style: .light)
+            gen2.impactOccurred()
+            try? await Task.sleep(for: .milliseconds(100))
+            generator.impactOccurred()
+            try? await Task.sleep(for: .milliseconds(100))
+            let gen3 = UINotificationFeedbackGenerator()
+            gen3.notificationOccurred(.success)
+        }
+    }
+
+    static func undoAction() {
+        guard isEnabled else { return }
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.warning)
+    }
 }

@@ -7,9 +7,13 @@ struct DashboardView: View {
            sort: \Quest.completedAt, order: .reverse)
     private var recentWins: [Quest]
 
+    @Query(filter: #Predicate<Quest> { $0.status == .active },
+           sort: \Quest.createdAt, order: .reverse)
+    private var activeQuests: [Quest]
+
     @Bindable var profile: PlayerProfile
     let streak: Streak
-    let challenge: DailyChallenge
+    @Bindable var challenge: DailyChallenge
     let todaySparks: Int
 
     var onPickQuest: () -> Void = {}
@@ -27,10 +31,15 @@ struct DashboardView: View {
                     levelProgress: profile.levelProgress
                 )
 
+                // Today's Focus — hero card highlighting next quest
+                if let focusQuest = activeQuests.first {
+                    todaysFocusCard(quest: focusQuest)
+                }
+
                 // Daily Challenge
                 DailyChallengeCard(challenge: challenge)
 
-                // Quick Actions
+                // Quick Actions (enhanced hierarchy)
                 quickActionsRow
 
                 // Streak Flame
@@ -53,6 +62,61 @@ struct DashboardView: View {
         .toolbarColorScheme(.dark, for: .navigationBar)
     }
 
+    // MARK: - Today's Focus Hero Card
+
+    private func todaysFocusCard(quest: Quest) -> some View {
+        Button {
+            HapticsManager.buttonTap()
+            onPickQuest()
+        } label: {
+            HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("NEXT UP")
+                        .font(SparkTypography.caption(11))
+                        .fontWeight(.bold)
+                        .foregroundStyle(SparkTheme.teal)
+                        .tracking(1.2)
+
+                    Text(quest.title)
+                        .font(SparkTypography.subheading(18))
+                        .foregroundStyle(SparkTheme.primaryText)
+                        .lineLimit(2)
+
+                    HStack(spacing: 8) {
+                        XPBadge(value: quest.xpValue, size: .small)
+
+                        HStack(spacing: 3) {
+                            Image(systemName: "clock")
+                                .font(.system(size: 10))
+                            Text("\(quest.estimatedMinutes)m")
+                                .font(SparkTypography.caption(11))
+                        }
+                        .foregroundStyle(SparkTheme.tertiaryText)
+                    }
+                }
+
+                Spacer()
+
+                Image(systemName: "play.circle.fill")
+                    .font(.system(size: 36))
+                    .foregroundStyle(SparkTheme.teal)
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(SparkTheme.cardBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(SparkTheme.teal.opacity(0.3), lineWidth: 1)
+                    )
+            )
+            .glow(color: SparkTheme.teal, radius: 6)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Next up: \(quest.title), \(quest.xpValue) XP")
+        .accessibilityHint("Tap to go to quest board")
+    }
+
     // MARK: - Quick Actions
 
     private var quickActionsRow: some View {
@@ -61,6 +125,7 @@ struct DashboardView: View {
                 title: "Pick a Quest",
                 icon: "target",
                 color: SparkTheme.teal,
+                isPrimary: true,
                 action: onPickQuest
             )
 
@@ -105,6 +170,7 @@ struct QuickActionButton: View {
     let title: String
     let icon: String
     let color: Color
+    var isPrimary: Bool = false
     let action: () -> Void
 
     @State private var isPressed = false
@@ -116,25 +182,29 @@ struct QuickActionButton: View {
         } label: {
             VStack(spacing: 8) {
                 Image(systemName: icon)
-                    .font(.system(size: 24))
+                    .font(.system(size: isPrimary ? 28 : 24))
                     .foregroundStyle(color)
 
                 Text(title)
-                    .font(SparkTypography.caption(12))
+                    .font(SparkTypography.caption(isPrimary ? 13 : 12))
+                    .fontWeight(isPrimary ? .semibold : .medium)
                     .foregroundStyle(SparkTheme.primaryText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, isPrimary ? 20 : 16)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(SparkTheme.cardBackground)
+                    .fill(isPrimary
+                        ? color.opacity(0.15)
+                        : SparkTheme.cardBackground)
                     .overlay(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(color.opacity(0.3), lineWidth: 1)
+                            .stroke(color.opacity(isPrimary ? 0.5 : 0.3), lineWidth: isPrimary ? 1.5 : 1)
                     )
             )
+            .glow(color: isPrimary ? color : .clear, radius: isPrimary ? 6 : 0)
         }
         .buttonStyle(.plain)
         .scaleEffect(isPressed ? 0.95 : 1)

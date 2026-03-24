@@ -70,7 +70,7 @@ extension Color {
     }
 }
 
-// MARK: - Typography
+// MARK: - Typography (Dynamic Type aware)
 
 enum SparkTypography {
     static func heading(_ size: CGFloat = 28) -> Font {
@@ -91,6 +91,20 @@ enum SparkTypography {
 
     static func questCard() -> Font {
         .system(size: 18, weight: .semibold, design: .rounded)
+    }
+}
+
+// Modifier to cap dynamic type for layout-sensitive views
+struct DynamicTypeCapped: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    }
+}
+
+extension View {
+    func dynamicTypeCapped() -> some View {
+        modifier(DynamicTypeCapped())
     }
 }
 

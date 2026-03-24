@@ -8,6 +8,7 @@ struct QuestCardView: View {
 
     @State private var offset: CGFloat = 0
     @State private var bobPhase: Bool = false
+    @State private var showCompletionBurst = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let cardColors: [Color] = [
@@ -128,7 +129,8 @@ struct QuestCardView: View {
                     // M2 fix: Use structured concurrency instead of DispatchQueue.main.asyncAfter
                     .onEnded { value in
                         if value.translation.width > 100 {
-                            // Swipe right — complete
+                            // Swipe right — complete with burst
+                            showCompletionBurst = true
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                 offset = 400
                             }
@@ -155,6 +157,13 @@ struct QuestCardView: View {
                     }
             )
         }
+        .overlay {
+            // Completion burst effect at swipe release
+            if showCompletionBurst && !reduceMotion {
+                CompletionBurstView()
+                    .allowsHitTesting(false)
+            }
+        }
         .onAppear {
             guard !reduceMotion else { return }
             withAnimation(
@@ -163,6 +172,43 @@ struct QuestCardView: View {
                 .delay(Double.random(in: 0...1))
             ) {
                 bobPhase = true
+            }
+        }
+    }
+}
+
+// MARK: - Completion Burst
+
+struct CompletionBurstView: View {
+    @State private var particles: [(id: Int, x: CGFloat, y: CGFloat, opacity: Double)] = []
+
+    let burstColors: [Color] = [
+        SparkTheme.mintGreen, SparkTheme.sunshineYellow, SparkTheme.teal,
+    ]
+
+    var body: some View {
+        ZStack {
+            ForEach(particles, id: \.id) { particle in
+                Circle()
+                    .fill(burstColors[particle.id % burstColors.count])
+                    .frame(width: 6, height: 6)
+                    .offset(x: particle.x, y: particle.y)
+                    .opacity(particle.opacity)
+            }
+        }
+        .onAppear { burst() }
+    }
+
+    private func burst() {
+        for i in 0..<12 {
+            particles.append((id: i, x: 0, y: 0, opacity: 1.0))
+        }
+        withAnimation(.easeOut(duration: 0.5)) {
+            for i in particles.indices {
+                let angle = Double(i) * (360.0 / 12.0) * .pi / 180.0
+                particles[i].x = CGFloat(cos(angle)) * CGFloat.random(in: 30...60)
+                particles[i].y = CGFloat(sin(angle)) * CGFloat.random(in: 20...40)
+                particles[i].opacity = 0
             }
         }
     }

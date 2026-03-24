@@ -18,6 +18,8 @@ struct QuestBoardView: View {
     @State private var newLevel = 0
     @State private var showQuestToast = false
     @State private var sessionCompletedCount = 0
+    @State private var showSwipeHint = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var sparkEngine: SparkEngine
     var profile: PlayerProfile
@@ -49,7 +51,7 @@ struct QuestBoardView: View {
             }
         }
         .confetti(isActive: $showConfetti)
-        .toast(isPresented: $showQuestToast, icon: "checkmark.circle.fill", message: sessionCompletedCount > 1 ? "On fire! \(sessionCompletedCount) quests today!" : "Quest completed!")
+        .toast(isPresented: $showQuestToast, icon: sessionCompletedCount >= 3 ? "flame.fill" : "checkmark.circle.fill", message: comboMessage, iconColor: sessionCompletedCount >= 3 ? SparkTheme.coral : SparkTheme.mintGreen)
         .overlay {
             if showLevelUp {
                 LevelUpCelebrationView(newLevel: newLevel) {
@@ -120,6 +122,17 @@ struct QuestBoardView: View {
         }
         .onAppear {
             refreshQuests()
+            // Show swipe hint on first launch
+            if !UserDefaults.standard.bool(forKey: "hasSeenSwipeHint") && !quests.isEmpty {
+                withAnimation(.easeIn(duration: 0.3).delay(0.5)) {
+                    showSwipeHint = true
+                }
+                Task {
+                    try? await Task.sleep(for: .seconds(3.5))
+                    withAnimation { showSwipeHint = false }
+                    UserDefaults.standard.set(true, forKey: "hasSeenSwipeHint")
+                }
+            }
         }
     }
 
@@ -128,7 +141,7 @@ struct QuestBoardView: View {
     private var questList: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
-                ForEach(quests) { quest in
+                ForEach(Array(quests.enumerated()), id: \.element.id) { index, quest in
                     QuestCardView(
                         quest: quest,
                         onComplete: {
@@ -146,6 +159,19 @@ struct QuestBoardView: View {
                         insertion: .scale.combined(with: .opacity),
                         removal: .slide.combined(with: .opacity)
                     ))
+                    .opacity(reduceMotion ? 1 : 1)
+                    .animation(
+                        reduceMotion ? .none : .spring(response: 0.4, dampingFraction: 0.7).delay(Double(index) * 0.05),
+                        value: quests.count
+                    )
+                    .overlay(alignment: .center) {
+                        // First-launch swipe hint on first card only
+                        if index == 0 && showSwipeHint {
+                            SwipeHintOverlay()
+                                .allowsHitTesting(false)
+                                .transition(.opacity)
+                        }
+                    }
                 }
 
                 // Skipped quests section
@@ -163,11 +189,22 @@ struct QuestBoardView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        EmptyStateView(
-            icon: "trophy.fill",
+        let hour = Calendar.current.component(.hour, from: Date())
+        let (message, icon, color): (String, String, Color) = {
+            if hour < 12 {
+                return ("Fresh morning, fresh start!\nEven one tiny quest counts.", "sunrise.fill", SparkTheme.sunshineYellow)
+            } else if hour < 17 {
+                return ("Board's clear — you crushed it!\nReady for more?", "trophy.fill", SparkTheme.sunshineYellow)
+            } else {
+                return ("Winding down? Add a small\nwin to end the day strong.", "moon.stars.fill", SparkTheme.teal)
+            }
+        }()
+
+        return EmptyStateView(
+            icon: icon,
             title: "Quest board is clear!",
-            message: "You're a legend.\nTime to capture new adventures.",
-            iconColor: SparkTheme.sunshineYellow,
+            message: message,
+            iconColor: color,
             action: {
                 showRapidCapture = true
             },
@@ -314,6 +351,16 @@ struct QuestBoardView: View {
         skippedQuests = (try? modelContext.fetch(descriptor)) ?? []
     }
 
+    private var comboMessage: String {
+        switch sessionCompletedCount {
+        case 0...1: "Quest completed!"
+        case 2: "2x Combo! Keep going!"
+        case 3: "3x STREAK! On fire!"
+        case 4...5: "\(sessionCompletedCount)x COMBO! Unstoppable!"
+        default: "\(sessionCompletedCount)x LEGENDARY STREAK!"
+        }
+    }
+
     private func sortIcon(for mode: QuestSurfacingEngine.SortMode) -> String {
         switch mode {
         case .shuffle: "shuffle"
@@ -336,4 +383,35 @@ struct QuestBoardView: View {
         )
     }
     .modelContainer(container)
+}
+
+// MARK: - Swipe Hint Overlay (2.6)
+
+struct SwipeHintOverlay: View {
+    @State private var offsetX: CGFloat = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "arrow.left.arrow.right")
+                .font(.system(size: 14, weight: .semibold))
+            Text("Swipe to complete or skip")
+                .font(SparkTypography.caption(13))
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(
+            Capsule()
+                .fill(SparkTheme.electricPurple.opacity(0.85))
+                .shadow(color: .black.opacity(0.3), radius: 6, y: 2)
+        )
+        .offset(x: offsetX)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 0.6).repeatCount(3, autoreverses: true)) {
+                offsetX = 20
+            }
+        }
+    }
 }

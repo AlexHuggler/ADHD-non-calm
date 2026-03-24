@@ -75,6 +75,7 @@ struct ContentView: View {
                 .tag(4)
             }
             .tint(SparkTheme.electricPurple)
+            .animation(.spring(response: 0.35, dampingFraction: 0.86), value: selectedTab)
 
             // Floating capture button
             captureButton
