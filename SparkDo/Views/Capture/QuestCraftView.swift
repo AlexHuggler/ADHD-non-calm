@@ -15,6 +15,7 @@ struct QuestCraftView: View {
     @State private var isQuestChain = false
     @State private var chainSteps: [String] = [""]
     @State private var showValidationShake = false
+    @State private var hasManuallySetTime = false
 
     private let timeOptions = [5, 10, 15, 30, 60]
 
@@ -64,6 +65,8 @@ struct QuestCraftView: View {
                             TextField("What's the quest?", text: $title)
                                 .font(SparkTypography.questCard())
                                 .foregroundStyle(SparkTheme.primaryText)
+                                .textInputAutocapitalization(.sentences)
+                                .submitLabel(.done)
                                 .padding(14)
                                 .background(
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -148,6 +151,7 @@ struct QuestCraftView: View {
                                 ForEach(timeOptions, id: \.self) { minutes in
                                     Button {
                                         estimatedMinutes = minutes
+                                        hasManuallySetTime = true
                                         // Auto-suggest XP based on time
                                         switch minutes {
                                         case 5: xpValue = 10
@@ -285,16 +289,30 @@ struct QuestCraftView: View {
                     .animation(.spring(response: 0.5, dampingFraction: 0.7), value: isEpic)
                     .animation(.spring(response: 0.5, dampingFraction: 0.7), value: isQuestChain)
                 }
+                .scrollDismissesKeyboard(.interactively)
             }
             .onAppear {
                 // Smart defaults based on time of day
                 let hour = Calendar.current.component(.hour, from: Date())
                 if hour < 11 {
                     energyLevel = .low
+                    estimatedMinutes = 5
                 } else if hour < 17 {
                     energyLevel = .medium
+                    estimatedMinutes = 15
                 } else {
                     energyLevel = .low
+                    estimatedMinutes = 5
+                }
+            }
+            .onChange(of: energyLevel) { _, newLevel in
+                // Smart time defaults: auto-set estimated time based on energy level
+                // unless user has manually picked a time
+                guard !hasManuallySetTime else { return }
+                switch newLevel {
+                case .low: estimatedMinutes = 5
+                case .medium: estimatedMinutes = 15
+                case .high: estimatedMinutes = 30
                 }
             }
             .navigationTitle("Craft a Quest")
@@ -364,12 +382,13 @@ struct QuestCraftView: View {
     // MARK: - Create
 
     private func createQuest() {
+        let trimmedTitle = title.trimmingCharacters(in: .whitespaces)
         let quest = Quest(
-            title: title,
+            title: trimmedTitle,
             xpValue: Int(xpValue),
             energyLevel: energyLevel,
             estimatedMinutes: estimatedMinutes,
-            notes: notes,
+            notes: notes.trimmingCharacters(in: .whitespaces),
             isEpic: isEpic,
             epicMotivation: epicMotivation
         )
@@ -380,7 +399,7 @@ struct QuestCraftView: View {
             let steps = chainSteps.filter { !$0.isEmpty }
             for (index, step) in steps.enumerated() {
                 let child = Quest(
-                    title: step,
+                    title: step.trimmingCharacters(in: .whitespaces),
                     xpValue: max(5, Int(xpValue) / steps.count),
                     energyLevel: energyLevel,
                     estimatedMinutes: max(5, estimatedMinutes / steps.count),

@@ -35,22 +35,45 @@ struct SparkDoApp: App {
                 if let appState {
                     ContentView(appState: appState)
                 } else {
-                    // Loading state
+                    // Skeleton loading state
                     ZStack {
                         SparkTheme.darkBackground.ignoresSafeArea()
 
-                        VStack(spacing: 16) {
-                            Image(systemName: "bolt.fill")
-                                .font(.system(size: 48))
-                                .foregroundStyle(SparkTheme.sunshineYellow)
+                        VStack(spacing: 20) {
+                            // Skeleton spark counter
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(SparkTheme.cardBackground)
+                                .frame(height: 100)
+                                .shimmer()
 
-                            Text("SparkDo")
-                                .font(SparkTypography.heading(32))
-                                .foregroundStyle(SparkTheme.primaryText)
+                            // Skeleton challenge card
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(SparkTheme.cardBackground)
+                                .frame(height: 120)
+                                .shimmer(duration: 2.5)
 
-                            ProgressView()
-                                .tint(SparkTheme.electricPurple)
+                            // Skeleton quick actions
+                            HStack(spacing: 12) {
+                                ForEach(0..<3, id: \.self) { _ in
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .fill(SparkTheme.cardBackground)
+                                        .frame(height: 70)
+                                        .shimmer(duration: 3.0)
+                                }
+                            }
+
+                            // Skeleton streak
+                            HStack {
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(SparkTheme.cardBackground)
+                                    .frame(width: 140, height: 44)
+                                    .shimmer()
+                                Spacer()
+                            }
+
+                            Spacer()
                         }
+                        .padding()
                     }
                     .onAppear {
                         appState = AppState(modelContext: sharedModelContainer.mainContext)

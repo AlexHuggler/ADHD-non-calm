@@ -212,7 +212,14 @@ struct SpinWheelView: View {
         Task {
             for i in 0..<15 {
                 try? await Task.sleep(for: .milliseconds(Int(Double(i) * 120)))
-                HapticsManager.wheelTick()
+                // Haptic escalation: light → medium → heavy ("slot machine" effect)
+                if i < 10 {
+                    HapticsManager.wheelTick()
+                } else if i < 13 {
+                    HapticsManager.buttonTap()
+                } else {
+                    HapticsManager.wheelLanding()
+                }
                 SoundManager.shared.play(.wheelTick)
             }
         }

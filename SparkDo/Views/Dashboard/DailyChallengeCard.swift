@@ -1,8 +1,9 @@
 import SwiftUI
 
 struct DailyChallengeCard: View {
-    let challenge: DailyChallenge
+    @Bindable var challenge: DailyChallenge
     var onTap: () -> Void = {}
+    var onIncrement: (() -> Void)? = nil
 
     @State private var appear = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -54,13 +55,36 @@ struct DailyChallengeCard: View {
                     .foregroundStyle(SparkTheme.secondaryText)
 
                 if !challenge.isCompleted {
-                    // Progress bar
-                    SparkProgressBar(
-                        progress: challenge.progress,
-                        height: 4,
-                        fillStyle: AnyShapeStyle(SparkTheme.sunshineYellow),
-                        trackColor: Color.white.opacity(0.1)
-                    )
+                    HStack(spacing: 12) {
+                        // Progress bar
+                        SparkProgressBar(
+                            progress: challenge.progress,
+                            height: 4,
+                            fillStyle: AnyShapeStyle(SparkTheme.sunshineYellow),
+                            trackColor: Color.white.opacity(0.1)
+                        )
+
+                        // Quick increment button
+                        Button {
+                            challenge.incrementProgress()
+                            HapticsManager.questComplete()
+                            SoundManager.shared.play(.questComplete)
+                            onIncrement?()
+                        } label: {
+                            Text("+1")
+                                .font(SparkTypography.caption(13))
+                                .fontWeight(.bold)
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .fill(SparkTheme.sunshineYellow.opacity(0.8))
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Increment challenge progress")
+                    }
 
                     Text("\(challenge.currentCount)/\(challenge.targetCount)")
                         .font(SparkTypography.caption(12))
